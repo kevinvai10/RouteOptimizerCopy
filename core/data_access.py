@@ -1,0 +1,46 @@
+""" Data access and reading elements """
+
+import pyodbc
+
+
+
+def fetchFromSQLServer(server, database, username, password):
+    """ Obtains the data from Alfonsos' SQL Server database format """
+
+    cnxn = pyodbc.connect(
+        'DRIVER={ODBC Driver 13 for SQL Server};SERVER=' + server + ';PORT=1443;DATABASE=' + database + ';UID=' + username + ';PWD=' + password)
+    cursor = cnxn.cursor()
+
+    tsql = """SELECT P.Date, P.Shift, P.MachineId, R.Loads, R.HT, R.Destination, R.Distance,
+            R.Material, R.CargCo, R.Cargue, M.Model FROM [PRODUC_FILTERED] R INNER JOIN
+            PRINCIPAL P ON R.Id = P.Id inner JOIN
+            Maquinas M ON R.Cargco = M.MachineId
+
+            --where P.[Date] between ('2013-01-01 00:00:00.000') and ('2013-07-01 00:00:00.000')
+            AND Loads IS NOT NULL
+            --and Destination in ('QUEBRADORA', 'TEPETATERA', 'TEPETAT #2')
+            AND Cargco IN ('C243', 'R418', 'R422', 'R417')"""
+
+    def to_dict(row):
+        """ Auxiliary function to make a dictionary out of a SQL row """
+
+        ret = dict()
+
+        ret['date'] = row[0]
+        ret['shift'] = row[1]
+        ret['machine'] = row[2]
+        ret['loads'] = row[3]
+        ret['haul_time'] = row[4]
+        ret['destination'] = row[5]
+        ret['distance'] = row[6]
+
+        return ret
+    data = list()
+
+    with cursor.execute(tsql):
+        row = cursor.fetchone()
+        while row:
+            data.append(to_dict(row))
+            row = cursor.fetchone()
+
+    return data
