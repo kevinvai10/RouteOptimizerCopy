@@ -13,10 +13,14 @@ def calculate_route_times(frame):
     """ Computes the average time in a route per truck by using the data """
 
 
-    # Group by machine and destination TODO: Add source to this filtering
-    grouped = frame.groupby(["machine", "destination"])
+    # Group by destination TODO: Add source to this filtering, verify the validity of this grouping
+    grouped = frame.groupby("destination")
 
-    # Compute average time
-    averages = grouped["haul_time"].mean()
+    # Compute the micro average time for each destination
+    averages = dict()
+    for k, v in grouped:
+        avg_time = (60/(v.loads/v.haul_time)).mean()
+        averages[k] = avg_time
+
 
     return dict(averages)

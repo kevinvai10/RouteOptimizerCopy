@@ -26,17 +26,20 @@ frame = pd.DataFrame(data)
 locations = list(frame['destination'].unique())
 # Machines
 machines = list(frame['machine'].unique())
-# Arc times in average TODO: Figure out the time unit here. I think minutes
+# Arc times in average
 times = calculate_route_times(frame)
+
+# Fleet size
+fsize = 29 # TODO: Parameterize this
 
 
 # Instantiate and solve problems
 
 # Compute all the location pairs (arcs in the graph)
-arcs = [(a, b) for a in locations for b in locations if a != b]
+arcs = [(a, b) for a in locations for b in locations if a != b and b in times]
 
 # Solve the subproblems
-subproblems = [LinearProblem(arc, times) for arc in arcs]
+subproblems = [LinearProblem(nodes, times, fsize) for nodes in arcs]
 
 results = dict()
 for p in subproblems:
