@@ -1,9 +1,11 @@
-from core import Parameters, calculate_route_times
+from core import Parameters, calculate_route_times, ProblemResults
 from core.optimization import LinearProblem, solve
 import core.data_access as da
 import pandas as pd
 
 
+# Job Name TODO: Parameterize
+job_name = "TestJob"
 
 # Program parameters
 params = Parameters(tonnage_demand=50, shift_length=12)
@@ -15,7 +17,7 @@ database = 'stg_Production'
 username = 'sa'
 password = 'Masteryoda12345!'
 
-data = da.fetchFromSQLServer(server, database, username, password)
+data = da.fetch_from_sqlserver(server, database, username, password)
 
 
 # Infer route times per segment and destinations
@@ -45,10 +47,12 @@ results = dict()
 for p in subproblems:
     try:
         k = p.name
-        solution = solve(p)
+        status, variables = solve(p)
+        solution = ProblemResults(status, variables)
         results[k] = solution
     except Exception as e:
         print(e)
 
 # Persist results
-# TODO: Store it somewhere, perhaps Amazon's table storage for the API to retrieve later ond
+# TODO: Store it somewhere, perhaps Amazon's table storage for the API to retrieve later on
+da.persist_results(job_name, results)
