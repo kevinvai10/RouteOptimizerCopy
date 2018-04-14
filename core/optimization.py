@@ -70,4 +70,6 @@ def solve(problem):
         fsc = LpAffineExpression(elements)
         instance += LpConstraint(elements, LpConstraintLE, "Fleet_conservation_%i" % j, problem.fleet_size)
 
-    pass
+    #instance.writeLP("test.lp")
+    status = instance.solve()
+    return status, X

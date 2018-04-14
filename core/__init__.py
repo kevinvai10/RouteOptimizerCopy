@@ -1,4 +1,7 @@
 """ Module file for Core """
+import json
+from pulp import LpStatus
+
 
 class Parameters(object):
     """ User provided parameters of the application """
@@ -22,5 +25,26 @@ def calculate_route_times(frame):
         avg_time = (60/(v.loads/v.haul_time)).mean()
         averages[k] = avg_time
 
-
     return dict(averages)
+
+
+class ProblemResults(object):
+    """ Represents the result of a LP problem """
+    def __init__(self, status, variables):
+        self.status = status
+        self.variables = variables
+
+    def to_json(self):
+        x = dict()
+
+        x['status'] = LpStatus[self.status]
+
+        variables = dict()
+        for k, v in self.variables.items():
+            variables[k] = {a.name:a.value() for a in v}
+
+        x['variables'] = variables#{v.name():{a.name():a.value() for a in v} for k, v in self.variables.items()}
+
+        jstring = json.dumps(x)
+
+        return jstring

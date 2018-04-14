@@ -1,10 +1,10 @@
 """ Data access and reading elements """
 
 import pyodbc
+import pickle
 
 
-
-def fetchFromSQLServer(server, database, username, password):
+def fetch_from_sqlserver(server, database, username, password):
     """ Obtains the data from Alfonsos' SQL Server database format """
 
     cnxn = pyodbc.connect(
@@ -44,3 +44,13 @@ def fetchFromSQLServer(server, database, username, password):
             row = cursor.fetchone()
 
     return data
+
+
+def persist_results(job_name, problem_results):
+    """ Persists the LP results to a backend storage, current implementation to a pickle file """
+
+    json_results = {k:v.to_json() for k, v in problem_results.items()}
+
+    with open('%s.pickle' % job_name, 'w') as f:
+        pickle.dump(json_results, f)
+
