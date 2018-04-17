@@ -33,6 +33,15 @@ class Location(object):
         """A car is uniquely identified by its name"""
         return hash(self.name)
 
+    def __eq__(self, other):
+        tp = type(other)
+        if tp == str:
+            return self.name == other
+        elif tp == Location:
+            return self.name == other.name
+        else:
+            return False
+
 
 class MineConfiguration(object):
     """Represents the arrangement of the mine as a graph connecting the locations.
