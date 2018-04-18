@@ -1,7 +1,7 @@
 """State representation of the mine"""
 
 import copy
-from core_search.entities import *
+import itertools as it
 
 
 class FleetState(object):
@@ -60,11 +60,29 @@ class FleetState(object):
 
             return all_covered
 
-
     def possible_actions(self):
         """ Possible actions from the current outcome """
-        # TODO: Implement this
-        pass
+
+        config = self.config
+
+        # First, figure out the locations in the mine that have any truck
+        rt = self.resident_trucks
+        locations = [l for l in rt if len(rt[l]) > 0]
+
+        # For each location, analyze the possible locations to be
+        # Keep track of the factors for the cartesian product of movements
+        factors = list()
+        for src in locations:
+            # What are the possible destinations, only consider those with enough room
+            destinations = [d for d in config.destinations(src) if self.resident_trucks[d] < d.resident_capacity]
+            local_trucks = self.resident_trucks[src]
+            possible_movements = self.__permutate_assignemnts(src, local_trucks, destinations)
+            factors.append(possible_movements)
+
+        # Return the cartesian product of the possible actions amount the qualifying restinations
+        # TODO: Perhaps filter by a criteria to avoid combinatorial explosion
+        return it.product(*factors)
+
 
     def execute_action(self, action):
         """ Executes an action and returns a copy of the mutated state"""
@@ -83,39 +101,48 @@ class FleetState(object):
         """ Actual implementation of execute action that mutates an instance of FleetState
             This function is not meant to be called directly, but by the instance method defined above """
 
-        reassigned_trucks = set()
+        # TODO: Consider the resident fleet here. Right now is being neglected for simplification purpuses
         # Iterate over each movement of the action
         for truck, source, destination in action.movements:
-            # Change the location of truck on the fleet state
-            instance.resident_trucks[source].remove(truck)
-            instance.resident_trucks[destination].add(truck)
-            # Increment the trip counter for this truck that was reasigned
+            # Increment the trip counter for this truck that was reassigned
             instance.trips += 1
-            # Keep track of this truck reasignment
-            reassigned_trucks.add(truck)
 
-        # Figure out the trucks that didn't change route (using set difference)
-        non_reassigned_trucks = instance.trucks() - reassigned_trucks
+            # If the destination is the endpoint of a route, don't change the location of the current truck,
+            # as the outcome of the action represents a round-trip from source to destination
+            if not (source, destination) in instance.route_demands:
+                # Change the location of truck on the fleet state
+                instance.resident_trucks[source].remove(truck)
+                instance.resident_trucks[destination].add(truck)
 
-        # Iterate throughout the connections in the configuration and update the demands with respect to the resident
-        # trucks. TODO: Consider the resident fleet here. Right now is being neglected for simplification purpuses
-        connections = instance.config.connections
-        for src, dst in connections:
-            # Consider only those connections where the garaje is not an endpoint
-            if src == "garage" or dst == "garage":
-                continue
-
-            # Consider only those connections that have a demand
-            if not (src, dst) in instance.route_demands:
-                continue
-
-            # Which trucks are in the current source of the edge
-            trucks = instance.resident_trucks[src]
-            for truck in trucks:
+            # If it is, then we decrement the remaining demand to be covered
+            else:
                 # Fetch the capacity of the truck
                 capacity = truck.tonnage_capacity
                 # Increment the covered demand by the capacity
-                instance.covered_demands[(src, dst)] += capacity
+                instance.covered_demands[(source, destination)] += capacity
+
+    def __permutate_assignemnts(self, src, trucks, locations):
+        """ Returns a sequence of movements that contain all the possible assignments emanating from the source"""
+
+        # Following the intuition behind the best answer in:
+        #  https://stackoverflow.com/questions/22939260/every-way-to-organize-n-objects-in-m-list-slots
+        # The "slots" are the places available on each destination. i.e. The shovel has no residing trucks
+        # and a capacity of two trucks, the we can send two different trucks, hence there are two shovel slots.
+        # We need the number of slots and their indices.
+        slots = list(
+            it.chain.from_iterable(it.repeat(l, l.resident_capacity - len(self.resident_trucks[l])) for l in locations)
+        )
+        num_slots = len(slots)
+
+        # Build the movement sequence
+        movements = list()
+        for perm in it.combinations(trucks, num_slots):
+            for ix, truck in enumerate(perm):
+                dst = slots[ix]
+                m = Movement(truck, src, dst)
+                movements.append(m)
+
+        return movements
 
 
 class Movement(object):
@@ -125,7 +152,7 @@ class Movement(object):
         """ Represents a movement that will be executed in an action """
         self.truck = truck
         self.source = source
-        self.destination = self.destination
+        self.destination = destination
 
     def __repr__(self):
         return "Move %s from %s to %s" % (self.truck, self.source, self.destination)
