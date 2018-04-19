@@ -74,11 +74,9 @@ class UniformCostSearch(object):
 
                     # See if we haven't been in this state before
                     if child not in explored:
-                        # TODO: Verify this if statement to see if it's complete. I feel it's missing the else clause
                         # If this child is not yet in the queue, add it!
                         if child not in queue:
                             heapq.heappush(queue, (child.cost, child))
-                    # TODO: Verify this clause. I feel I made a mistake
                     else:
                         # Check if the element is in the queue with another cost and if so, replace it, in one pass
                         for ix in range(len(queue)):
