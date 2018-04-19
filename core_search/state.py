@@ -25,7 +25,11 @@ class FleetState(object):
             self.resident_trucks = {loc: set() for loc in config.locations()}
             self.trucks = {truck for truck in truck_capacities}
 
-        # Look for the garage and set all the trucks to be on it
+
+    def __eq__(self, other):
+        """ Compares two fleet states to check equivalence """
+        # We can ignore the mine configuration and truck capacities, as they're constant throughout the process
+        return self.covered_demands == other.covered_demands and self.resident_trucks == other.resident_trucks
 
     def clone(self):
         """ Creates a new instance of the state with the same values """
@@ -82,7 +86,6 @@ class FleetState(object):
         # Return the cartesian product of the possible actions amount the qualifying restinations
         # TODO: Perhaps filter by a criteria to avoid combinatorial explosion
         return it.product(*factors)
-
 
     def execute_action(self, action):
         """ Executes an action and returns a copy of the mutated state"""
