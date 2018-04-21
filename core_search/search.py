@@ -1,6 +1,7 @@
 """ This file contains an implementation of search algorithms """
 import heapq
 
+
 class Node(object):
     """ Node of a search tree """
     def __init__(self, state, cost = 0, action=None, parent = None):
@@ -21,7 +22,6 @@ class Node(object):
     def __hash__(self):
         """ Similarly, only use the state's hash as the node's hash """
         return hash(self.state)
-
 
 
 class UniformCostSearch(object):
@@ -51,7 +51,7 @@ class UniformCostSearch(object):
         # Main loop of UCS
         while solution is None and len(queue) > 0:
             # Fetch the next node to consider
-            node = heapq.heappop(queue)
+            _, node = heapq.heappop(queue) # Ignore the first element of the tuple, which is the cost used for ranking
             # Add it to the explored cache
             explored.add(node)
             # Reference to the state
@@ -70,7 +70,7 @@ class UniformCostSearch(object):
                     # Execute the given action to mutate the clone
                     new_state.execute_action(action)
                     # Create the child node
-                    child = Node(new_state, new_state.execute_action, action, node)
+                    child = Node(new_state, new_state.trips, action, node)
 
                     # See if we haven't been in this state before
                     if child not in explored:

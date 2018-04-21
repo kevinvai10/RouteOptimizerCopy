@@ -11,7 +11,7 @@ class Truck(object):
 
     def __repr__(self):
         """Human-friendly representation of the current instance"""
-        return "Car name: %s - Capacity: %i tons" % (self.name, self.tonnage_capacity)
+        return "Truck name: %s - Capacity: %i tons" % (self.name, self.tonnage_capacity)
 
 
     def __hash__(self):
@@ -47,7 +47,7 @@ class MineConfiguration(object):
     """Represents the arrangement of the mine as a graph connecting the locations.
     This class represents a graph representation of the mine"""
     def __init__(self, connections):
-        """Connections is a list of the directed edges of the graph. The nodes are infered from the pairs"""
+        """Connections is a list of the directed edges of the graph. The nodes are inferred from the pairs"""
 
         # Store the raw edges
         self._connections = tuple(connections)

@@ -7,7 +7,7 @@ import itertools as it
 class FleetState(object):
     """ Represents the current status of the fleet """
 
-    def __init__(self, config, truck_capacities, route_demands, warm_start=False):
+    def __init__(self, config, trucks, route_demands, warm_start=False):
         """ Parameters:
                 - config: MineConfiguration instance
                 - truck_capacities: Map from truck name to tonnage capacity. Fleet members are inferred from this parameter
@@ -15,15 +15,17 @@ class FleetState(object):
         """
 
         self.config = config
-        self.truck_capacities = truck_capacities
+        self.trucks = trucks
         self.route_demands = route_demands
         self.trips = 0
+        self.garage = list(filter(lambda l: l.name == "garage", config.locations()))[0]
 
         if not warm_start:
             # Internal book keeping of the state
             self.covered_demands = {k: 0 for k in route_demands}
             self.resident_trucks = {loc: set() for loc in config.locations()}
-            self.trucks = {truck for truck in truck_capacities}
+            # Assume all trucks are on the garage
+            for t in self.trucks: self.resident_trucks[self.garage].add(t)
 
 
     def __eq__(self, other):
@@ -33,7 +35,7 @@ class FleetState(object):
 
     def clone(self):
         """ Creates a new instance of the state with the same values """
-        cl = FleetState(self.config, self.truck_capacities, self.route_demands, warm_start=True)
+        cl = FleetState(self.config, self.trucks, self.route_demands, warm_start=True)
         cl.covered_demands = copy.copy(self.covered_demands)
         cl.resident_trucks = copy.copy(self.resident_trucks)
         cl.trucks = self.trucks # No need to copy this as it's immutable
@@ -42,7 +44,7 @@ class FleetState(object):
 
     def __hash__(self):
         """ Custom hash implementation to consider only elements of interest """
-        elements = (self.covered_demands, self.resident_trucks)
+        elements = (frozenset(self.covered_demands.items()), frozenset(map(lambda x: (x[0], frozenset(x[1])), self.resident_trucks.items())))
 
         return hash(elements)
 
@@ -50,7 +52,7 @@ class FleetState(object):
         """ Returns true whether this is a successful state """
 
         # All trucks should be in the garage
-        all_in_garage = len(self.resident_trucks["garage"]) == len(self.trucks)
+        all_in_garage = len(self.resident_trucks[self.garage]) == len(self.trucks)
 
         if not all_in_garage:
             return False
@@ -78,26 +80,39 @@ class FleetState(object):
         factors = list()
         for src in locations:
             # What are the possible destinations, only consider those with enough room
-            destinations = [d for d in config.destinations(src) if self.resident_trucks[d] < d.resident_capacity]
-            local_trucks = self.resident_trucks[src]
+            destinations = list()
+            # Compute how many trucks we can move at most
+            num_moves = 0
+            for d in config.destinations(src):
+                slots_available = d.resident_capacity - len(self.resident_trucks[d])
+                if slots_available > 0:
+                    destinations.append(d)
+                    num_moves += slots_available
+
+            # Consider only the same number of trucks as the possible number of moves
+            # and pick the trucks with the highest capacity
+            local_trucks = sorted(self.resident_trucks[src], key=lambda t: t.tonnage_capacity, reverse=True)[:num_moves]
             possible_movements = self.__permutate_assignemnts(src, local_trucks, destinations)
             factors.append(possible_movements)
 
         # Return the cartesian product of the possible actions amount the qualifying restinations
         # TODO: Perhaps filter by a criteria to avoid combinatorial explosion
-        return it.product(*factors)
+        ret = list()
+        for p in it.product(*factors):
+            movements = p[0]
+            ret.append(Action(*movements))
+
+        return ret
 
     def execute_action(self, action):
         """ Executes an action and returns a copy of the mutated state"""
 
-        # First create a copy of the current state
-        cl = self.clone()
-
+        # TODO: Clean this, maybe the auxiliary method is not necessary
         # Now execute the action over the clone and mutate its state
-        FleetState.__execute_action(cl, action)
+        FleetState.__execute_action(self, action)
 
         # Return the mutated state
-        return cl
+        return self
 
     @staticmethod
     def __execute_action(instance, action):
@@ -106,7 +121,8 @@ class FleetState(object):
 
         # TODO: Consider the resident fleet here. Right now is being neglected for simplification purpuses
         # Iterate over each movement of the action
-        for truck, source, destination in action.movements:
+        for movement in action.movements:
+            truck, source, destination = movement.truck, movement.source, movement.destination
             # Increment the trip counter for this truck that was reassigned
             instance.trips += 1
 
@@ -139,11 +155,13 @@ class FleetState(object):
 
         # Build the movement sequence
         movements = list()
-        for perm in it.combinations(trucks, num_slots):
+        for perm in it.permutations(trucks, num_slots):
+            x = list()
             for ix, truck in enumerate(perm):
                 dst = slots[ix]
                 m = Movement(truck, src, dst)
-                movements.append(m)
+                x.append(m)
+            movements.append(x)
 
         return movements
 
