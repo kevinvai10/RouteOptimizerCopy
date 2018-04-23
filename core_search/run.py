@@ -56,8 +56,10 @@ demands = {
     (loader1, waste_dump): 100,
 }
 
+num_segments = 48
+
 # Create the initial state
-initial_state = FleetState(config, trucks, demands)
+initial_state = FleetState(config, trucks, demands, num_segments)
 
 # Let it run!
 searcher = UniformCostSearch(initial_state)

@@ -7,7 +7,7 @@ import itertools as it
 class FleetState(object):
     """ Represents the current status of the fleet """
 
-    def __init__(self, config, trucks, route_demands, warm_start=False):
+    def __init__(self, config, trucks, route_demands, max_segment, warm_start=False):
         """ Parameters:
                 - config: MineConfiguration instance
                 - truck_capacities: Map from truck name to tonnage capacity. Fleet members are inferred from this parameter
@@ -17,13 +17,15 @@ class FleetState(object):
         self.config = config
         self.trucks = trucks
         self.route_demands = route_demands
-        self.trips = 0
         self.garage = list(filter(lambda l: l.name == "garage", config.locations()))[0]
+        self.max_segment = max_segment
 
         if not warm_start:
             # Internal book keeping of the state
+            self.trips = 0
             self.covered_demands = {k: 0 for k in route_demands}
             self.resident_trucks = {loc: set() for loc in config.locations()}
+            self.segment = 1
             # Assume all trucks are on the garage
             for t in self.trucks: self.resident_trucks[self.garage].add(t)
 
@@ -35,10 +37,12 @@ class FleetState(object):
 
     def clone(self):
         """ Creates a new instance of the state with the same values """
-        cl = FleetState(self.config, self.trucks, self.route_demands, warm_start=True)
-        cl.covered_demands = copy.copy(self.covered_demands)
-        cl.resident_trucks = copy.copy(self.resident_trucks)
+        cl = FleetState(self.config, self.trucks, self.route_demands, self.max_segment, warm_start=True)
+        cl.covered_demands = {k: v for k, v in self.covered_demands.items()}
+        cl.resident_trucks = {k: copy.copy(v) for k, v in self.resident_trucks.items()}
         cl.trucks = self.trucks # No need to copy this as it's immutable
+        cl.trips = self.trips
+        cl.segment = self.segment
 
         return cl
 
@@ -64,7 +68,10 @@ class FleetState(object):
                     all_covered = False
                     break
 
-            return all_covered
+            if self.segment <= self.max_segment and all_covered:
+                return True
+            else:
+                return False
 
     def possible_actions(self):
         """ Possible actions from the current outcome """
@@ -105,40 +112,31 @@ class FleetState(object):
         return ret
 
     def execute_action(self, action):
-        """ Executes an action and returns a copy of the mutated state"""
-
-        # TODO: Clean this, maybe the auxiliary method is not necessary
-        # Now execute the action over the clone and mutate its state
-        FleetState.__execute_action(self, action)
-
-        # Return the mutated state
-        return self
-
-    @staticmethod
-    def __execute_action(instance, action):
         """ Actual implementation of execute action that mutates an instance of FleetState
             This function is not meant to be called directly, but by the instance method defined above """
+
+        self.segment += 1
 
         # TODO: Consider the resident fleet here. Right now is being neglected for simplification purpuses
         # Iterate over each movement of the action
         for movement in action.movements:
             truck, source, destination = movement.truck, movement.source, movement.destination
             # Increment the trip counter for this truck that was reassigned
-            instance.trips += 1
+            self.trips += 1
 
             # If the destination is the endpoint of a route, don't change the location of the current truck,
             # as the outcome of the action represents a round-trip from source to destination
-            if not (source, destination) in instance.route_demands:
+            if not (source, destination) in self.route_demands:
                 # Change the location of truck on the fleet state
-                instance.resident_trucks[source].remove(truck)
-                instance.resident_trucks[destination].add(truck)
+                self.resident_trucks[source].remove(truck)
+                self.resident_trucks[destination].add(truck)
 
             # If it is, then we decrement the remaining demand to be covered
             else:
                 # Fetch the capacity of the truck
                 capacity = truck.tonnage_capacity
                 # Increment the covered demand by the capacity
-                instance.covered_demands[(source, destination)] += capacity
+                self.covered_demands[(source, destination)] += capacity
 
     def __permutate_assignemnts(self, src, trucks, locations):
         """ Returns a sequence of movements that contain all the possible assignments emanating from the source"""
@@ -151,14 +149,25 @@ class FleetState(object):
         slots = list(
             it.chain.from_iterable(it.repeat(l, l.resident_capacity - len(self.resident_trucks[l])) for l in locations)
         )
+
         num_slots = len(slots)
+        trucks = list(trucks)
 
         # Build the movement sequence
         movements = list()
-        for perm in it.permutations(trucks, num_slots):
+        # for perm in it.permutations(trucks, num_slots):
+        #     x = list()
+        #     for ix, truck in enumerate(perm):
+        #         dst = slots[ix]
+        #         m = Movement(truck, src, dst)
+        #         x.append(m)
+        #     movements.append(x)
+
+        for perm in it.permutations(slots, len(trucks)):
             x = list()
-            for ix, truck in enumerate(perm):
-                dst = slots[ix]
+            for ix, slot in enumerate(perm):
+                dst = slot
+                truck = trucks[ix]
                 m = Movement(truck, src, dst)
                 x.append(m)
             movements.append(x)

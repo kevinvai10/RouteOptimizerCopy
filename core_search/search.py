@@ -17,7 +17,13 @@ class Node(object):
 
     def __eq__(self, other):
         """ Only consider the state for comparisons"""
-        return self.state == other.state
+        return self.state == other.state and self.cost == other.cost
+
+    def __lt__(self, other):
+        return self.cost < other.cost
+
+    def __le__(self, other):
+        return self.cost <= other.cost
 
     def __hash__(self):
         """ Similarly, only use the state's hash as the node's hash """
@@ -43,6 +49,7 @@ class UniformCostSearch(object):
         queue = list()
 
         # Add the initial state to the priority queue
+        # heapq.heappush(queue, (root.cost, root))
         heapq.heappush(queue, (root.cost, root))
 
         # Reference to the solution, currently empty
@@ -64,7 +71,9 @@ class UniformCostSearch(object):
             # Otherwise, expand the fringe of the search
             else:
                 # Compute the possible children
-                for action in state.possible_actions():
+                for ix, action in enumerate(state.possible_actions()):
+                    if ix >= 3:
+                        break
                     # Clone the state
                     new_state = state.clone()
                     # Execute the given action to mutate the clone
@@ -75,7 +84,7 @@ class UniformCostSearch(object):
                     # See if we haven't been in this state before
                     if child not in explored:
                         # If this child is not yet in the queue, add it!
-                        if child not in queue:
+                        if child not in map(lambda e: e[1], queue):
                             heapq.heappush(queue, (child.cost, child))
                     else:
                         # Check if the element is in the queue with another cost and if so, replace it, in one pass
