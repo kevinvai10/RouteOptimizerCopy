@@ -43,7 +43,7 @@ connections = [
 config = MineConfiguration(connections)
 
 # Generate the trucks
-trucks = [Truck("truck_%i" % i, c) for i, c in zip(range(1, 22), it.cycle([10, 8, 20]))]
+trucks = [Truck("truck_%i" % i, c) for i, c in zip(range(1, 22), it.cycle([100]))]
 
 
 # Build some fake demands
