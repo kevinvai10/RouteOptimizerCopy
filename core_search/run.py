@@ -48,12 +48,12 @@ trucks = [Truck("truck_%i" % i, c) for i, c in zip(range(1, 22), it.cycle([10, 8
 
 # Build some fake demands
 demands = {
-    (shovel1, crusher): 100,
-    (shovel2, crusher): 100,
-    (loader1, crusher): 100,
-    (shovel1, waste_dump): 100,
-    (shovel2, waste_dump): 100,
-    (loader1, waste_dump): 100,
+    (shovel1, crusher): 8000,
+    (shovel2, crusher): 12000,
+    (loader1, crusher): 4000,
+    (shovel1, waste_dump): 16000,
+    (shovel2, waste_dump): 20000,
+    (loader1, waste_dump): 10000,
 }
 
 num_segments = 48
