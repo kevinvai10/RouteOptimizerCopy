@@ -18,12 +18,9 @@ garage = Location("garage", 21)
 connections = [
     (garage, loader1),
     (garage, loader2),
-    (loader1, garage),
-    (loader2, garage),
-    (waste_dump, garage),
-    (crusher, garage),
-    (shovel1, garage),
-    (shovel2, garage),
+    #(loader1, garage), Once per shift, only applicable if truck doesn't have load
+    #(loader2, garage), Once per shift, only applicable if truck doesn't have load
+    #(waste_dump, garage), Once per shift
     (garage, shovel1),
     (garage, shovel2),
     (waste_dump, loader1),
