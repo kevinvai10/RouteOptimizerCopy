@@ -72,8 +72,8 @@ class UniformCostSearch(object):
             else:
                 # Compute the possible children
                 for ix, action in enumerate(state.possible_actions()):
-                    if ix >= 3:
-                        break
+                    # if ix >= 3:
+                    #    break
                     # Clone the state
                     new_state = state.clone()
                     # Execute the given action to mutate the clone

@@ -2,6 +2,7 @@
 
 import copy
 import itertools as it
+from collections import defaultdict
 
 
 class FleetState(object):
@@ -33,7 +34,23 @@ class FleetState(object):
     def __eq__(self, other):
         """ Compares two fleet states to check equivalence """
         # We can ignore the mine configuration and truck capacities, as they're constant throughout the process
-        return self.covered_demands == other.covered_demands and self.resident_trucks == other.resident_trucks
+        return self.covered_demands == other.covered_demands and self.__factorize_assignments() == other.__factorize_assignments()
+
+    def __hash__(self):
+        """ Custom hash implementation to consider only elements of interest """
+        #elements = (frozenset(self.covered_demands.items()), frozenset(map(lambda x: (x[0], frozenset(x[1])), self.resident_trucks.items())))
+
+        elements = (frozenset(self.covered_demands.items()), self.__factorize_assignments())
+
+        return hash(elements)
+
+    def __factorize_assignments(self):
+
+        # Generate tuples for the resident truck configurations of the following format:
+        # (location, # of trucks, total capacity)
+        return frozenset((k, len(v), sum(t.tonnage_capacity for t in v)) for k, v in self.resident_trucks.items())
+
+
 
     def clone(self):
         """ Creates a new instance of the state with the same values """
@@ -46,11 +63,7 @@ class FleetState(object):
 
         return cl
 
-    def __hash__(self):
-        """ Custom hash implementation to consider only elements of interest """
-        elements = (frozenset(self.covered_demands.items()), frozenset(map(lambda x: (x[0], frozenset(x[1])), self.resident_trucks.items())))
 
-        return hash(elements)
 
     def is_successful(self):
         """ Returns true whether this is a successful state """
@@ -104,10 +117,10 @@ class FleetState(object):
 
         # Return the cartesian product of the possible actions amount the qualifying restinations
         # TODO: Perhaps filter by a criteria to avoid combinatorial explosion
-        ret = list()
+        ret = set()
         for p in it.product(*factors):
             movements = p[0]
-            ret.append(Action(*movements))
+            ret.add(Action(*movements))
 
         return ret
 
@@ -153,6 +166,10 @@ class FleetState(object):
         num_slots = len(slots)
         trucks = list(trucks)
 
+        truck_capacities = {k:list(g) for k, g in it.groupby(sorted(trucks, key=lambda t: t.tonnage_capacity), key = lambda t: t.tonnage_capacity)}
+
+        surrogates = list(it.chain.from_iterable(it.repeat(k, len(v)) for k, v in truck_capacities.items()))
+
         # Build the movement sequence
         movements = list()
         # for perm in it.permutations(trucks, num_slots):
@@ -163,11 +180,13 @@ class FleetState(object):
         #         x.append(m)
         #     movements.append(x)
 
-        for perm in it.permutations(slots, len(trucks)):
+        for perm in it.permutations(slots, len(surrogates)):
             x = list()
             for ix, slot in enumerate(perm):
                 dst = slot
-                truck = trucks[ix]
+                #truck = trucks[ix]
+                surrogate_key = surrogates[ix]
+                truck = truck_capacities[surrogate_key].pop()
                 m = Movement(truck, src, dst)
                 x.append(m)
             movements.append(x)
@@ -197,3 +216,11 @@ class Action(object):
         """ Keeps track of the movements that will happen during this action """
         self.movements = movements
 
+    def __hash__(self):
+        capacities = defaultdict(list)
+        for m in self.movements:
+            src, dst, truck = m.source, m.destination, m.truck
+            capacities[(src, dst)].append(truck)
+
+        elements = frozenset((k[0], k[1], len(v), sum(t.tonnage_capacity for t in v)) for k, v in capacities.items())
+        return hash(elements)
