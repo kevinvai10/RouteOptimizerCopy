@@ -1,5 +1,5 @@
 """ This file contains an implementation of search algorithms """
-import heapq
+import heapq, sys
 
 
 class Node(object):
@@ -32,9 +32,10 @@ class Node(object):
 
 class UniformCostSearch(object):
 
-    def __init__(self, initial_state):
+    def __init__(self, initial_state, heuristic = lambda s: 0):
         """ Parameters: initial_state: First step of the search """
         self.initial_state = initial_state
+        self.heuristic = heuristic
 
     def solve(self):
         """ Does a Uniform Cost Search and returns a reference to a node containing an optimal solution """
@@ -55,10 +56,15 @@ class UniformCostSearch(object):
         # Reference to the solution, currently empty
         solution = None
 
+        num = 0
+
         # Main loop of UCS
         while solution is None and len(queue) > 0:
+            num += 1
+
             # Fetch the next node to consider
             _, node = heapq.heappop(queue) # Ignore the first element of the tuple, which is the cost used for ranking
+            print("Iteration: %i\tEstimated Cost: %i\tAcutal Cost: %i\tSegnment: %i\tQueue size: %i" % (num, node.cost, node.state.trips, node.state.segment, len(queue)))
             # Add it to the explored cache
             explored.add(node)
             # Reference to the state
@@ -79,10 +85,12 @@ class UniformCostSearch(object):
                     # Execute the given action to mutate the clone
                     new_state.execute_action(action)
                     # Create the child node
-                    child = Node(new_state, new_state.trips, action, node)
+                    child = Node(new_state, new_state.trips + self.heuristic(new_state), action, node)
 
+                    if child.cost >= sys.maxsize:
+                        continue
                     # See if we haven't been in this state before
-                    if child not in explored:
+                    elif child not in explored:
                         # If this child is not yet in the queue, add it!
                         if child not in map(lambda e: e[1], queue):
                             heapq.heappush(queue, (child.cost, child))

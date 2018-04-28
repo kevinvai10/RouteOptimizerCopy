@@ -18,7 +18,7 @@ class FleetState(object):
         self.config = config
         self.trucks = trucks
         self.route_demands = route_demands
-        self.garage = list(filter(lambda l: l.name == "garage", config.locations()))[0]
+
         self.max_segment = max_segment
 
         if not warm_start:
@@ -27,8 +27,17 @@ class FleetState(object):
             self.covered_demands = {k: 0 for k in route_demands}
             self.resident_trucks = {loc: set() for loc in config.locations()}
             self.segment = 1
+
+            self.garage = list(filter(lambda l: l.name == "garage", config.locations()))[0]
+
             # Assume all trucks are on the garage
             for t in self.trucks: self.resident_trucks[self.garage].add(t)
+
+
+
+            # Used for the heuristic computation
+            self.max_capacity = max(t.tonnage_capacity for t in trucks)
+            self.num_effective_routes = sum(d.resident_capacity for s, d in route_demands)
 
 
     def __eq__(self, other):
@@ -60,6 +69,9 @@ class FleetState(object):
         cl.trucks = self.trucks # No need to copy this as it's immutable
         cl.trips = self.trips
         cl.segment = self.segment
+        cl.garage = self.garage
+        cl.max_capacity = self.max_capacity
+        cl.num_effective_routes = self.num_effective_routes
 
         return cl
 
@@ -117,6 +129,7 @@ class FleetState(object):
 
         # Return the cartesian product of the possible actions amount the qualifying restinations
         # TODO: Perhaps filter by a criteria to avoid combinatorial explosion
+        # TODO: Add a heuristic to do a beam search
         ret = set()
         for p in it.product(*factors):
             movements = p[0]
@@ -130,7 +143,7 @@ class FleetState(object):
 
         self.segment += 1
 
-        # TODO: Consider the resident fleet here. Right now is being neglected for simplification purpuses
+        # TODO: Consider the resident fleet here. Right now is being neglected for simplification purpouses
         # Iterate over each movement of the action
         for movement in action.movements:
             truck, source, destination = movement.truck, movement.source, movement.destination
@@ -150,48 +163,6 @@ class FleetState(object):
                 capacity = truck.tonnage_capacity
                 # Increment the covered demand by the capacity
                 self.covered_demands[(source, destination)] += capacity
-
-    # def __permutate_assignemnts(self, src, trucks, locations):
-    #     """ Returns a sequence of movements that contain all the possible assignments emanating from the source"""
-    #
-    #     # Following the intuition behind the best answer in:
-    #     #  https://stackoverflow.com/questions/22939260/every-way-to-organize-n-objects-in-m-list-slots
-    #     # The "slots" are the places available on each destination. i.e. The shovel has no residing trucks
-    #     # and a capacity of two trucks, the we can send two different trucks, hence there are two shovel slots.
-    #     # We need the number of slots and their indices.
-    #     slots = list(
-    #         it.chain.from_iterable(it.repeat(l, l.resident_capacity - len(self.resident_trucks[l])) for l in locations)
-    #     )
-    #
-    #     num_slots = len(slots)
-    #     trucks = list(trucks)
-    #
-    #     truck_capacities = {k:list(g) for k, g in it.groupby(sorted(trucks, key=lambda t: t.tonnage_capacity), key = lambda t: t.tonnage_capacity)}
-    #
-    #     surrogates = list(it.chain.from_iterable(it.repeat(k, len(v)) for k, v in truck_capacities.items()))
-    #
-    #     # Build the movement sequence
-    #     movements = list()
-    #     # for perm in it.permutations(trucks, num_slots):
-    #     #     x = list()
-    #     #     for ix, truck in enumerate(perm):
-    #     #         dst = slots[ix]
-    #     #         m = Movement(truck, src, dst)
-    #     #         x.append(m)
-    #     #     movements.append(x)
-    #
-    #     for perm in it.permutations(slots, len(surrogates)):
-    #         x = list()
-    #         for ix, slot in enumerate(perm):
-    #             dst = slot
-    #             #truck = trucks[ix]
-    #             surrogate_key = surrogates[ix]
-    #             truck = truck_capacities[surrogate_key].pop()
-    #             m = Movement(truck, src, dst)
-    #             x.append(m)
-    #         movements.append(x)
-    #
-    #     return movements
 
     def __permutate_assignemnts(self, src, trucks, locations):
         """ Returns a sequence of movements that contain all the possible assignments emanating from the source"""

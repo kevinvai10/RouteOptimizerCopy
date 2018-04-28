@@ -1,6 +1,8 @@
 """ This file is a test script """
 
 import itertools as it
+import math
+import sys
 from core_search.entities import *
 from core_search.state import *
 from core_search.search import *
@@ -58,8 +60,35 @@ num_segments = 48
 # Create the initial state
 initial_state = FleetState(config, trucks, demands, num_segments)
 
+def heuristic(state):
+    max_segments = state.max_segment
+    current_segment = state.segment
+    to_go = max(max_segments - current_segment, 0)
+
+    total_trips = 0
+    attainable_trips = 0
+
+    # Given the current configuration, how many trips we need to do before finishing?
+    for k, v in state.route_demands.items():
+        remaining = v - state.covered_demands[k]
+        if remaining > 0:
+            s, d = k
+            l = len(state.resident_trucks[s])
+            if l == 0:
+                return sys.maxsize
+            attainable_trips += to_go * l
+            capacity = sum(t.tonnage_capacity for t in state.resident_trucks[s])
+            trips = int(v/capacity)
+            total_trips += trips
+
+    if total_trips <= attainable_trips:
+        return total_trips
+    else:
+        return sys.maxsize
+
+
 # Let it run!
-searcher = UniformCostSearch(initial_state)
+searcher = UniformCostSearch(initial_state, heuristic)
 
 solution = searcher.solve()
 
