@@ -151,6 +151,48 @@ class FleetState(object):
                 # Increment the covered demand by the capacity
                 self.covered_demands[(source, destination)] += capacity
 
+    # def __permutate_assignemnts(self, src, trucks, locations):
+    #     """ Returns a sequence of movements that contain all the possible assignments emanating from the source"""
+    #
+    #     # Following the intuition behind the best answer in:
+    #     #  https://stackoverflow.com/questions/22939260/every-way-to-organize-n-objects-in-m-list-slots
+    #     # The "slots" are the places available on each destination. i.e. The shovel has no residing trucks
+    #     # and a capacity of two trucks, the we can send two different trucks, hence there are two shovel slots.
+    #     # We need the number of slots and their indices.
+    #     slots = list(
+    #         it.chain.from_iterable(it.repeat(l, l.resident_capacity - len(self.resident_trucks[l])) for l in locations)
+    #     )
+    #
+    #     num_slots = len(slots)
+    #     trucks = list(trucks)
+    #
+    #     truck_capacities = {k:list(g) for k, g in it.groupby(sorted(trucks, key=lambda t: t.tonnage_capacity), key = lambda t: t.tonnage_capacity)}
+    #
+    #     surrogates = list(it.chain.from_iterable(it.repeat(k, len(v)) for k, v in truck_capacities.items()))
+    #
+    #     # Build the movement sequence
+    #     movements = list()
+    #     # for perm in it.permutations(trucks, num_slots):
+    #     #     x = list()
+    #     #     for ix, truck in enumerate(perm):
+    #     #         dst = slots[ix]
+    #     #         m = Movement(truck, src, dst)
+    #     #         x.append(m)
+    #     #     movements.append(x)
+    #
+    #     for perm in it.permutations(slots, len(surrogates)):
+    #         x = list()
+    #         for ix, slot in enumerate(perm):
+    #             dst = slot
+    #             #truck = trucks[ix]
+    #             surrogate_key = surrogates[ix]
+    #             truck = truck_capacities[surrogate_key].pop()
+    #             m = Movement(truck, src, dst)
+    #             x.append(m)
+    #         movements.append(x)
+    #
+    #     return movements
+
     def __permutate_assignemnts(self, src, trucks, locations):
         """ Returns a sequence of movements that contain all the possible assignments emanating from the source"""
 
@@ -168,30 +210,45 @@ class FleetState(object):
 
         truck_capacities = {k:list(g) for k, g in it.groupby(sorted(trucks, key=lambda t: t.tonnage_capacity), key = lambda t: t.tonnage_capacity)}
 
-        surrogates = list(it.chain.from_iterable(it.repeat(k, len(v)) for k, v in truck_capacities.items()))
+        capacity_amounts = {k:len(v) for k, v in truck_capacities.items()}
+        capacity_amounts[None] = len(slots)
+
 
         # Build the movement sequence
         movements = list()
-        # for perm in it.permutations(trucks, num_slots):
-        #     x = list()
-        #     for ix, truck in enumerate(perm):
-        #         dst = slots[ix]
-        #         m = Movement(truck, src, dst)
-        #         x.append(m)
-        #     movements.append(x)
 
-        for perm in it.permutations(slots, len(surrogates)):
-            x = list()
-            for ix, slot in enumerate(perm):
-                dst = slot
-                #truck = trucks[ix]
-                surrogate_key = surrogates[ix]
-                truck = truck_capacities[surrogate_key].pop()
-                m = Movement(truck, src, dst)
-                x.append(m)
-            movements.append(x)
+        assignments = self.helper(len(slots), capacity_amounts)
+
+        for a in assignments:
+            tc = {k:copy.copy(v) for k, v in truck_capacities.items()}
+            local_movements = list()
+            for ix, kind in enumerate(a):
+                if kind:
+                    dst = slots[ix]
+                    truck = tc[kind].pop()
+                    m = Movement(truck, src, dst)
+                    local_movements.append(m)
+            movements.append(local_movements)
 
         return movements
+
+    def helper(self, slots, capacities):
+        if slots == 0 or sum(capacities.values()) == 0:
+            return list()
+        else:
+            ret = list()
+            for k, v in capacities.items():
+                if v > 0:
+                    elem = k
+                    new_capacities = copy.copy(capacities)
+                    new_capacities[k] -= 1
+                    reminder = self.helper(slots-1, new_capacities)
+                    if len(reminder) > 0:
+                        x = [[elem] + r for r in reminder]
+                        ret.extend(x)
+                    else:
+                        ret.append([elem])
+            return ret
 
 
 class Movement(object):

@@ -89,7 +89,7 @@ class UniformCostSearch(object):
                     else:
                         # Check if the element is in the queue with another cost and if so, replace it, in one pass
                         for ix in range(len(queue)):
-                            elem = queue[ix]
+                            elem = queue[ix][1]
                             # If we identify the current node equivalent to the current child
                             if elem == child:
                                 # And if the cost of the child is less than that of the current node
