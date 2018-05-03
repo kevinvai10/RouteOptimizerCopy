@@ -36,6 +36,7 @@ class UniformCostSearch(object):
         """ Parameters: initial_state: First step of the search """
         self.initial_state = initial_state
         self.heuristic = heuristic
+        self.sofar = (0, None)
 
     def solve(self):
         """ Does a Uniform Cost Search and returns a reference to a node containing an optimal solution """
@@ -64,7 +65,12 @@ class UniformCostSearch(object):
 
             # Fetch the next node to consider
             _, node = heapq.heappop(queue) # Ignore the first element of the tuple, which is the cost used for ranking
-            print("Iteration: %i\tEstimated Cost: %i\tAcutal Cost: %i\tSegnment: %i\tQueue size: %i" % (num, node.cost, node.state.trips, node.state.segment, len(queue)))
+            print("Iteration: %i\tEstimated Cost: %i\tAcutal Cost: %i\tSegment: %i\tQueue size: %i" % (num, node.cost, node.state.trips, node.state.segment, len(queue)))
+
+            x = node.state.progress()
+            if x > self.sofar[0]:
+                self.sofar = (x, state)
+
             # Add it to the explored cache
             explored.add(node)
             # Reference to the state

@@ -2,6 +2,8 @@
 
 import copy
 import itertools as it
+from functools import reduce
+from operator import mul
 from collections import defaultdict
 
 
@@ -38,6 +40,9 @@ class FleetState(object):
             # Used for the heuristic computation
             self.max_capacity = max(t.tonnage_capacity for t in trucks)
             self.num_effective_routes = sum(d.resident_capacity for s, d in route_demands)
+
+    def progress(self):
+        return sum(self.covered_demands.values())
 
 
     def __eq__(self, other):
@@ -130,12 +135,60 @@ class FleetState(object):
         # Return the cartesian product of the possible actions amount the qualifying restinations
         # TODO: Perhaps filter by a criteria to avoid combinatorial explosion
         # TODO: Add a heuristic to do a beam search
+        total_combinations = reduce(mul, map(len, factors))
+
+        if total_combinations < 1000:
+            new_factors = factors
+        else:
+            new_factors = list()
+            for factor in factors:
+                if len(factor) <= 5:
+                    new_factors.append(factor)
+                else:
+                    reduced_factor = list(sorted(factor, key=self.beam_heuristic, reverse=True))[:5]
+                    new_factors.append(reduced_factor)
+
         ret = set()
-        for p in it.product(*factors):
+        for p in it.product(*new_factors):
             movements = p[0]
             ret.add(Action(*movements))
 
-        return ret
+        r = [(self.beam_heuristic(a.movements), a) for a in ret]
+        ranked_ret = sorted(r, key=lambda a: a[0], reverse=True)
+
+        true_ret = set()
+        for a in ranked_ret:
+            true_ret.add(a[1])
+            if len(true_ret) >= 100:
+                break
+
+        return true_ret
+
+    def beam_heuristic(self, series):
+        """ Computes the potential of contribution of each series of movements and gives it a score for ranking
+            on a beam search """
+        potential = 0
+        reminders = { k: (self.route_demands[k]- self.covered_demands[k]) for k in self.route_demands}
+        tails = {s for s, d in reminders}
+
+        for movement in series:
+            source = movement.source
+            destination = movement.destination
+
+            # Compute whether the change from location reasigns the truck to a route with "potential" in the sense
+            # of being reassigned to a place with demand from another place with demand
+            key = (source, destination)
+            if key in reminders:
+                reminder = reminders[key]
+                if reminder > 0:
+                    potential += 2
+            elif destination in tails:
+                potential += 1
+            elif source in tails:
+                potential -= 1
+
+
+        return potential
 
     def execute_action(self, action):
         """ Actual implementation of execute action that mutates an instance of FleetState
