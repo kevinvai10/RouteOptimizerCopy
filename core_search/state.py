@@ -137,7 +137,7 @@ class FleetState(object):
         # TODO: Add a heuristic to do a beam search
         total_combinations = reduce(mul, map(len, factors))
 
-        if total_combinations < 1000:
+        if total_combinations < 10000000:
             new_factors = factors
         else:
             new_factors = list()
@@ -162,7 +162,8 @@ class FleetState(object):
             if len(true_ret) >= 100:
                 break
 
-        return true_ret
+        #return true_ret
+        return [r[1] for r in ranked_ret]
 
     def beam_heuristic(self, series):
         """ Computes the potential of contribution of each series of movements and gives it a score for ranking
@@ -290,6 +291,7 @@ class Movement(object):
     def __str__(self):
         return repr(self)
 
+
 class Action(object):
     """ Encodes the action to be taken as a series of movements """
 
@@ -305,3 +307,6 @@ class Action(object):
 
         elements = frozenset((k[0], k[1], len(v), sum(t.tonnage_capacity for t in v)) for k, v in capacities.items())
         return hash(elements)
+
+    def __eq__(self, other):
+        return hash(self) == hash(other)
