@@ -1,5 +1,5 @@
 """ This file contains an implementation of search algorithms """
-import heapq, sys
+import sys, heapq
 
 
 class Node(object):
@@ -17,7 +17,7 @@ class Node(object):
 
     def __eq__(self, other):
         """ Only consider the state for comparisons"""
-        return self.state == other.state and self.cost == other.cost
+        return self.state == other.state
 
     def __lt__(self, other):
         return self.cost < other.cost
@@ -36,7 +36,6 @@ class UniformCostSearch(object):
         """ Parameters: initial_state: First step of the search """
         self.initial_state = initial_state
         self.heuristic = heuristic
-        self.sofar = (0, None)
 
     def solve(self):
         """ Does a Uniform Cost Search and returns a reference to a node containing an optimal solution """
@@ -51,8 +50,8 @@ class UniformCostSearch(object):
         queue = list()
 
         # Add the initial state to the priority queue
-        # heapq.heappush(queue, (root.cost, root))
         heapq.heappush(queue, (root.cost, root))
+
 
         # Reference to the solution, currently empty
         solution = None
@@ -68,8 +67,6 @@ class UniformCostSearch(object):
             print("Iteration: %i\tEstimated Cost: %i\tAcutal Cost: %i\tSegment: %i\tQueue size: %i" % (num, node.cost, node.state.trips, node.state.segment, len(queue)))
 
             x = node.state.progress()
-            if x > self.sofar[0]:
-                self.sofar = (x, state)
 
             # Add it to the explored cache
             explored.add(node)
@@ -83,9 +80,8 @@ class UniformCostSearch(object):
             # Otherwise, expand the fringe of the search
             else:
                 # Compute the possible children
-                for ix, action in enumerate(state.possible_actions()):
-                    # if ix >= 3:
-                    #    break
+                possible_actions = state.possible_actions()
+                for ix, action in enumerate(possible_actions):
                     # Clone the state
                     new_state = state.clone()
                     # Execute the given action to mutate the clone

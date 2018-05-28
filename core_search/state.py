@@ -35,8 +35,6 @@ class FleetState(object):
             # Assume all trucks are on the garage
             for t in self.trucks: self.resident_trucks[self.garage].add(t)
 
-
-
             # Used for the heuristic computation
             self.max_capacity = max(t.tonnage_capacity for t in trucks)
             self.num_effective_routes = sum(d.resident_capacity for s, d in route_demands)
@@ -44,11 +42,11 @@ class FleetState(object):
     def progress(self):
         return sum(self.covered_demands.values())
 
-
     def __eq__(self, other):
         """ Compares two fleet states to check equivalence """
         # We can ignore the mine configuration and truck capacities, as they're constant throughout the process
-        return self.covered_demands == other.covered_demands and self.__factorize_assignments() == other.__factorize_assignments()
+        #return self.covered_demands == other.covered_demands and self.__factorize_assignments() == other.__factorize_assignments()
+        return hash(self) == hash(other)
 
     def __hash__(self):
         """ Custom hash implementation to consider only elements of interest """
@@ -64,8 +62,6 @@ class FleetState(object):
         # (location, # of trucks, total capacity)
         return frozenset((k, len(v), sum(t.tonnage_capacity for t in v)) for k, v in self.resident_trucks.items())
 
-
-
     def clone(self):
         """ Creates a new instance of the state with the same values """
         cl = FleetState(self.config, self.trucks, self.route_demands, self.max_segment, warm_start=True)
@@ -79,8 +75,6 @@ class FleetState(object):
         cl.num_effective_routes = self.num_effective_routes
 
         return cl
-
-
 
     def is_successful(self):
         """ Returns true whether this is a successful state """
@@ -106,11 +100,14 @@ class FleetState(object):
     def possible_actions(self):
         """ Possible actions from the current outcome """
 
+        if self.segment >= self.max_segment:
+            return list()
+
         config = self.config
 
         # First, figure out the locations in the mine that have any truck
         rt = self.resident_trucks
-        locations = [l for l in rt if len(rt[l]) > 0]
+        locations = sorted([l for l in rt if len(rt[l]) > 0], key= lambda l: l.name)
 
         # For each location, analyze the possible locations to be
         # Keep track of the factors for the cartesian product of movements
@@ -120,7 +117,12 @@ class FleetState(object):
             destinations = list()
             # Compute how many trucks we can move at most
             num_moves = 0
-            for d in config.destinations(src):
+            ds = sorted(config.destinations(src), key=lambda l: l.name)
+            for d in ds:
+                if d in self.route_demands:
+                    if self.covered_demands[d] >= self.route_demands[d]:
+                        continue
+
                 slots_available = d.resident_capacity - len(self.resident_trucks[d])
                 if slots_available > 0:
                     destinations.append(d)
@@ -129,41 +131,47 @@ class FleetState(object):
             # Consider only the same number of trucks as the possible number of moves
             # and pick the trucks with the highest capacity
             local_trucks = sorted(self.resident_trucks[src], key=lambda t: t.tonnage_capacity, reverse=True)[:num_moves]
-            possible_movements = self.__permutate_assignemnts(src, local_trucks, destinations)
-            factors.append(possible_movements)
+            possible_movements = self.__permutate_assignemnts(src, local_trucks, destinations) # TODO Check for undeterminisms here
+
+            if len(possible_movements) > 0:
+                factors.append(possible_movements)
 
         # Return the cartesian product of the possible actions amount the qualifying restinations
         # TODO: Perhaps filter by a criteria to avoid combinatorial explosion
         # TODO: Add a heuristic to do a beam search
         total_combinations = reduce(mul, map(len, factors))
 
-        if total_combinations < 10000000:
-            new_factors = factors
-        else:
-            new_factors = list()
-            for factor in factors:
-                if len(factor) <= 5:
-                    new_factors.append(factor)
-                else:
-                    reduced_factor = list(sorted(factor, key=self.beam_heuristic, reverse=True))[:5]
-                    new_factors.append(reduced_factor)
+        #if total_combinations < 2000000:
+        new_factors = factors
+        #else:
+        #new_factors = list()
+        #for factor in factors:
+        #    if len(factor) <= 5:
+        #        new_factors.append(factor)
+        #    else:
+        #        reduced_factor = list(sorted(factor, key=self.beam_heuristic, reverse=True))[:5]
+        #        new_factors.append(reduced_factor)
 
         ret = set()
+        ordered_ret = list()
         for p in it.product(*new_factors):
             movements = p[0]
-            ret.add(Action(*movements))
+            action = Action(*movements)
+            if action not in ret:
+                ret.add(action)
+                ordered_ret.append(action)
 
-        r = [(self.beam_heuristic(a.movements), a) for a in ret]
-        ranked_ret = sorted(r, key=lambda a: a[0], reverse=True)
+        #r = [(self.beam_heuristic(a.movements), a) for a in ret]
+        #ranked_ret = sorted(r, key=lambda a: a[0], reverse=True)
 
-        true_ret = set()
-        for a in ranked_ret:
-            true_ret.add(a[1])
-            if len(true_ret) >= 100:
-                break
+        #true_ret = set()
+        #for a in ranked_ret:
+        #    true_ret.add(a[1])
+        #    if len(true_ret) >= 100:
+        #        break
 
         #return true_ret
-        return [r[1] for r in ranked_ret]
+        return ret#[r[1] for r in ranked_ret]
 
     def beam_heuristic(self, series):
         """ Computes the potential of contribution of each series of movements and gives it a score for ranking
@@ -188,17 +196,21 @@ class FleetState(object):
             elif source in tails:
                 potential -= 1
 
-
         return potential
 
     def execute_action(self, action):
         """ Actual implementation of execute action that mutates an instance of FleetState
             This function is not meant to be called directly, but by the instance method defined above """
 
-        self.segment += 1
+        repeat = True
 
         # TODO: Consider the resident fleet here. Right now is being neglected for simplification purpouses
         # Iterate over each movement of the action
+        #while repeat:
+        self.segment += 1
+        #if len(action.movements) == 0:
+        #    repeat = False
+
         for movement in action.movements:
             truck, source, destination = movement.truck, movement.source, movement.destination
             # Increment the trip counter for this truck that was reassigned
@@ -210,6 +222,7 @@ class FleetState(object):
                 # Change the location of truck on the fleet state
                 self.resident_trucks[source].remove(truck)
                 self.resident_trucks[destination].add(truck)
+                #repeat = False
 
             # If it is, then we decrement the remaining demand to be covered
             else:
@@ -217,6 +230,9 @@ class FleetState(object):
                 capacity = truck.tonnage_capacity
                 # Increment the covered demand by the capacity
                 self.covered_demands[(source, destination)] += capacity
+
+                #if self.covered_demands[(source, destination)] >= self.route_demands[(source, destination)]:
+                #    repeat = False
 
     def __permutate_assignemnts(self, src, trucks, locations):
         """ Returns a sequence of movements that contain all the possible assignments emanating from the source"""
@@ -226,21 +242,21 @@ class FleetState(object):
         # The "slots" are the places available on each destination. i.e. The shovel has no residing trucks
         # and a capacity of two trucks, the we can send two different trucks, hence there are two shovel slots.
         # We need the number of slots and their indices.
-        slots = list(
-            it.chain.from_iterable(it.repeat(l, l.resident_capacity - len(self.resident_trucks[l])) for l in locations)
-        )
+        slots = list(map(lambda x: x[0], sorted(
+            it.chain.from_iterable(it.repeat((l, l.resident_capacity - len(self.resident_trucks[l])),
+                                             l.resident_capacity - len(self.resident_trucks[l])) for l in locations
+        ), key=lambda x: x[1], reverse=True)))
 
-        num_slots = len(slots)
-        trucks = list(trucks)
+        trucks = sorted(list(trucks), key=lambda t: t.name)
 
         truck_capacities = {k:list(g) for k, g in it.groupby(sorted(trucks, key=lambda t: t.tonnage_capacity), key = lambda t: t.tonnage_capacity)}
 
         capacity_amounts = {k:len(v) for k, v in truck_capacities.items()}
         capacity_amounts[None] = len(slots)
 
-
         # Build the movement sequence
-        movements = list()
+        movements = set()
+        movements_ordered = list()
 
         assignments = self.helper(len(slots), capacity_amounts)
 
@@ -253,9 +269,12 @@ class FleetState(object):
                     truck = tc[kind].pop()
                     m = Movement(truck, src, dst)
                     local_movements.append(m)
-            movements.append(local_movements)
+            tupled_local_movements = tuple(local_movements)
+            if tupled_local_movements not in movements:
+                movements.add(tupled_local_movements)
+                movements_ordered.append(tupled_local_movements)
 
-        return movements
+        return sorted(movements_ordered, key=len, reverse=True)
 
     def helper(self, slots, capacities):
         if slots == 0 or sum(capacities.values()) == 0:
@@ -290,6 +309,12 @@ class Movement(object):
 
     def __str__(self):
         return repr(self)
+
+    def __hash__(self):
+        return hash((self.truck, self.source, self.destination))
+
+    def __eq__(self, other):
+        return hash(self) == hash(other)
 
 
 class Action(object):
