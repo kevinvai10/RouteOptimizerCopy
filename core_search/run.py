@@ -38,7 +38,8 @@ connections = [
     (crusher, shovel2),
     (shovel2, crusher),
     (crusher, loader2),
-    (loader2, crusher)
+    (loader2, crusher),
+    (loader1, crusher)
 ]
 
 config = MineConfiguration(connections)
@@ -49,14 +50,14 @@ trucks = [Truck("truck_%i" % i, c) for i, c in zip(range(1, 22), it.cycle([100])
 
 # Build some fake demands
 demands = OrderedDict([((shovel1, crusher), 8000),
-((shovel2, crusher), 12000),
+((shovel2, crusher), 1200),
 ((loader1, crusher), 4000),
-((shovel1, waste_dump), 16000),
-((shovel2, waste_dump), 20000),
-((loader1, waste_dump), 10000)]
+((shovel1, waste_dump), 1600),
+((shovel2, waste_dump), 2000),
+((loader1, waste_dump), 1000)]
 )
 
-num_segments = 48
+num_segments = 58
 
 # Create the initial state
 initial_state = FleetState(config, trucks, demands, num_segments)
@@ -91,9 +92,6 @@ def heuristic2(state):
     max_segments = state.max_segment
     current_segment = state.segment
     to_go = max(max_segments - current_segment, 0)
-
-    total_trips = 0
-    attainable_trips = 0
 
     trucks = sorted(state.trucks, key=lambda t: t.tonnage_capacity, reverse=True)
 
@@ -131,6 +129,13 @@ searcher = UniformCostSearch(initial_state, heuristic2)
 
 solution = searcher.solve()
 
-print(solution.cost)
+if solution:
+    print(solution.cost)
+else:
+    print("No solution found")
+
+path = searcher.best.path_from_root()
+path[-1].state.possible_actions()
+x = 1
 
 pass

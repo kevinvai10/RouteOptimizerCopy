@@ -29,6 +29,17 @@ class Node(object):
         """ Similarly, only use the state's hash as the node's hash """
         return hash(self.state)
 
+    def path_from_root(self):
+        """ Returns the path from the root to the current node"""
+        reversed_path = [self]
+
+        current = self
+        while current.parent:
+            current = current.parent
+            reversed_path.insert(0, current)
+
+        return reversed_path
+
 
 class UniformCostSearch(object):
 
@@ -36,6 +47,15 @@ class UniformCostSearch(object):
         """ Parameters: initial_state: First step of the search """
         self.initial_state = initial_state
         self.heuristic = heuristic
+        self.best = None
+        self.saturation = 0.0
+
+    def compute_saturation(self, state):
+        total_demand = sum(state.route_demands.values())
+        covered_demand = sum(min(state.route_demands[k], state.covered_demands[k]) for k in state.route_demands)
+
+        return covered_demand / total_demand
+
 
     def solve(self):
         """ Does a Uniform Cost Search and returns a reference to a node containing an optimal solution """
@@ -64,7 +84,7 @@ class UniformCostSearch(object):
 
             # Fetch the next node to consider
             _, node = heapq.heappop(queue) # Ignore the first element of the tuple, which is the cost used for ranking
-            print("Iteration: %i\tEstimated Cost: %i\tAcutal Cost: %i\tSegment: %i\tQueue size: %i" % (num, node.cost, node.state.trips, node.state.segment, len(queue)))
+            print("Iteration: %i\tEstimated Cost: %i\tAcutal Cost: %i\tSegment: %i\tProgress: %f\tQueue size: %i" % (num, node.cost, node.state.trips, node.state.segment, self.compute_saturation(node.state), len(queue)))
 
             x = node.state.progress()
 
@@ -72,6 +92,15 @@ class UniformCostSearch(object):
             explored.add(node)
             # Reference to the state
             state = node.state
+
+            if not self.best:
+                self.best = node
+            else:
+                saturation = self.compute_saturation(state)
+                if saturation >= self.saturation:
+                    self.saturation = saturation
+                    self.best = node
+
 
             # If this is a successful state, bingo!
             if state.is_successful():

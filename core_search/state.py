@@ -1,6 +1,7 @@
 """State representation of the mine"""
 
 import copy
+import math
 import itertools as it
 from functools import reduce
 from operator import mul
@@ -97,7 +98,89 @@ class FleetState(object):
             else:
                 return False
 
-    def possible_actions(self):
+    def possible_actions(self): return self._new_possible_actions()
+
+    def _new_possible_actions(self):
+
+        # If time's up, no actions left
+        if self.segment >= self.max_segment:
+            return list()
+
+        movement_list = list()
+        config = self.config
+
+        # First, figure out the locations in the mine that have any truck
+        rt = self.resident_trucks
+        locations = sorted([l for l in rt if len(rt[l]) > 0], key=lambda l: l.name)
+
+        factors = list()
+
+        for src in locations:
+            # What are the possible destinations, only consider those with enough room
+            # Compute how many trucks we can move at most
+            num_moves = 0
+            ds = sorted(config.destinations(src), key=lambda l: l.name)
+
+            local_trucks = sorted(self.resident_trucks[src], key=lambda t: t.tonnage_capacity, reverse=True)
+
+            demand_ds = list()
+            non_demand_ds = list()
+            for d in ds:
+                if (src, d) in self.route_demands:
+                    demand_ds.append(d)
+                else:
+                    non_demand_ds.append(d)
+
+            # If the pair has demand
+            for d in demand_ds:
+                key = (src, d)
+
+                # If there's still demand to cover in this route
+                if self.covered_demands[key] < self.route_demands[key]:
+                    remaining_demand = self.route_demands[key] - self.covered_demands[key]
+                    for i in range(d.resident_capacity):
+                        if remaining_demand > 0 and len(local_trucks) > 0:
+                            t = local_trucks.pop()
+                            movement_list.append(Movement(t, src, d))
+                            remaining_demand -= t.tonnage_capacity
+                        else:
+                            break
+
+            eligible_ds = list()
+            for d in non_demand_ds:
+                for d2 in config.destinations(d):
+                    key = (d, d2)
+                    if key in self.route_demands:
+                        remaining_demand = self.route_demands[key] - self.covered_demands[key]
+                        if remaining_demand > 0:
+                            eligible_ds.append(d)
+                            break
+
+
+            # Here do something with the elegibles
+            for d in eligible_ds:
+                if len(local_trucks) > 0:
+                    num_slots = d.resident_capacity - len(self.resident_trucks[d])
+                    for i in range(num_slots):
+                        t = local_trucks.pop()
+                        movement_list.append(Movement(t, src, d))
+                else:
+                    break
+
+
+            if src != self.garage:
+                # For the remaining trucks, send them back to the garage
+                for t in local_trucks:
+                    movement_list.append(Movement(t, src, self.garage))
+
+
+
+        x = [Action(*movement_list)]
+
+        return x
+
+
+    def _old_possible_actions(self):
         """ Possible actions from the current outcome """
 
         if self.segment >= self.max_segment:
@@ -119,10 +202,16 @@ class FleetState(object):
             num_moves = 0
             ds = sorted(config.destinations(src), key=lambda l: l.name)
             for d in ds:
-                if d in self.route_demands:
-                    if self.covered_demands[d] >= self.route_demands[d]:
+                key = (src, d)
+
+                is_productive = False
+                if key in self.route_demands:
+                    is_productive = True
+                    if self.covered_demands[key] >= self.route_demands[key]:
                         continue
 
+                # TODO: Enable de resident truck capacity
+                i = len(self.resident_trucks[d]) if not is_productive else 0
                 slots_available = d.resident_capacity - len(self.resident_trucks[d])
                 if slots_available > 0:
                     destinations.append(d)
@@ -131,7 +220,7 @@ class FleetState(object):
             # Consider only the same number of trucks as the possible number of moves
             # and pick the trucks with the highest capacity
             local_trucks = sorted(self.resident_trucks[src], key=lambda t: t.tonnage_capacity, reverse=True)[:num_moves]
-            possible_movements = self.__permutate_assignemnts(src, local_trucks, destinations) # TODO Check for undeterminisms here
+            possible_movements = self.__permutate_assignemnts(src, local_trucks, destinations) # TODO Check for undeterminism here
 
             if len(possible_movements) > 0:
                 factors.append(possible_movements)
@@ -202,37 +291,74 @@ class FleetState(object):
         """ Actual implementation of execute action that mutates an instance of FleetState
             This function is not meant to be called directly, but by the instance method defined above """
 
-        repeat = True
+        # Figure out if all the movements are on a route with demand
+        shortcut = True if len(action.movements) > 0 else False
 
-        # TODO: Consider the resident fleet here. Right now is being neglected for simplification purpouses
-        # Iterate over each movement of the action
-        #while repeat:
-        self.segment += 1
-        #if len(action.movements) == 0:
-        #    repeat = False
+        for m in action.movements:
+            s, d = (m.source, m.destination)
+            if (s, d) not in self.route_demands:
+                shortcut = False
+                break
+            elif self.covered_demands[(s, d)] >= self.route_demands[(s, d)]:
+                shortcut = False
+                break
 
-        for movement in action.movements:
-            truck, source, destination = movement.truck, movement.source, movement.destination
-            # Increment the trip counter for this truck that was reassigned
-            self.trips += 1
+        if not shortcut:
+            # TODO: Consider the resident fleet here. Right now is being neglected for simplification purpouses
+            self.segment += 1
 
-            # If the destination is the endpoint of a route, don't change the location of the current truck,
-            # as the outcome of the action represents a round-trip from source to destination
-            if not (source, destination) in self.route_demands:
-                # Change the location of truck on the fleet state
-                self.resident_trucks[source].remove(truck)
-                self.resident_trucks[destination].add(truck)
-                #repeat = False
+            # Iterate over each movement of the action
+            for movement in action.movements:
+                truck, source, destination = movement.truck, movement.source, movement.destination
+                # Increment the trip counter for this truck that was reassigned
+                self.trips += 1
 
-            # If it is, then we decrement the remaining demand to be covered
-            else:
-                # Fetch the capacity of the truck
-                capacity = truck.tonnage_capacity
-                # Increment the covered demand by the capacity
-                self.covered_demands[(source, destination)] += capacity
+                # If the destination is the endpoint of a route, don't change the location of the current truck,
+                # as the outcome of the action represents a round-trip from source to destination
+                if not (source, destination) in self.route_demands:
+                    # Change the location of truck on the fleet state
+                    self.resident_trucks[source].remove(truck)
+                    self.resident_trucks[destination].add(truck)
 
-                #if self.covered_demands[(source, destination)] >= self.route_demands[(source, destination)]:
-                #    repeat = False
+                # If it is, then we decrement the remaining demand to be covered
+                else:
+                    # Fetch the capacity of the truck
+                    capacity = truck.tonnage_capacity
+                    # Compute the remaining capacity
+                    remaining = self.route_demands[(source, destination)] - self.covered_demands[(source, destination)]
+                    # Increment the covered demand by the capacity or the remaining capacity
+                    self.covered_demands[(source, destination)] += min(capacity, remaining)
+
+        else:
+
+            groups = defaultdict(list)
+            for movement in action.movements:
+                truck, source, destination = movement.truck, movement.source, movement.destination
+                k = (source, destination)
+                groups[k].append(truck)
+
+            remaining_demand = {k:(self.route_demands[k] - self.covered_demands[k]) for k in groups}
+
+            candidate_segment_amounts = [self.max_segment-self.segment]
+            for k in groups:
+                trucks = groups[k]
+                remaining = remaining_demand[k]
+                capacity = float(sum(t.tonnage_capacity for t in trucks))
+                segments = math.ceil(remaining/capacity)
+                candidate_segment_amounts.append(segments)
+
+            num_segments = min(candidate_segment_amounts)
+
+            for k in groups:
+                trucks = groups[k]
+                capacity = float(sum(t.tonnage_capacity for t in trucks))
+                self.covered_demands[k] += min(remaining_demand[k], (capacity * num_segments))
+                if self.covered_demands[k] > self.route_demands[k]:
+                    print("beeep!!")
+                self.trips += (len(trucks) * num_segments)
+
+            self.segment += num_segments
+
 
     def __permutate_assignemnts(self, src, trucks, locations):
         """ Returns a sequence of movements that contain all the possible assignments emanating from the source"""
