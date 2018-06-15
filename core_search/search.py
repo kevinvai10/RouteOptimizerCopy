@@ -77,7 +77,7 @@ class AStar(object):
 
             # Fetch the next node to consider
             _, node = heapq.heappop(queue) # Ignore the first element of the tuple, which is the cost used for ranking
-            print("Iteration: %i\tEstimated Cost: %i\tAcutal Cost: %i\tSegment: %i\tProgress: %f" % (num, node.cost, node.state.trips, node.state.segment, node.state.progress()))
+            print("Iteration: %i\tEstimated Cost: %i\tAcutal Cost: %i\tSegment: %i\tProgress: %i tons" % (num, node.cost, node.state.trips, node.state.segment, node.state.total_covered_demand()))
 
             # Add it to the explored cache
             explored.add(node)

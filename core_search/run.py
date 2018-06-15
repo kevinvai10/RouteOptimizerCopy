@@ -1,5 +1,6 @@
 """ This file is a test script with a toy mine """
 
+import pprint
 from collections import OrderedDict
 
 from core_search.entities import *
@@ -102,6 +103,19 @@ searcher = AStar(initial_state, heuristic)
 solution = searcher.solve()
 
 if solution:
-    print(solution.cost)
+    print()
+    print("Total number of trips: %i" % solution.cost)
+    print()
+    nodes = solution.path_from_root()
+    prev_seg = 1
+    for ix, n in enumerate(nodes):
+        if n.action:
+            s = n.state
+            num_segments = s.segment - prev_seg
+            prev_seg = s.segment
+            print("Dispatch: %i\tRepeated: %i times\tTons moved: %i" % (ix, num_segments, s.total_covered_demand()))
+            pprint.pprint(n.action.movements)
+            print()
+
 else:
     print("No solution found")
