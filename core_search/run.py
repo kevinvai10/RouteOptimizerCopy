@@ -62,12 +62,15 @@ initial_state = FleetState(config, trucks, demands, num_segments)
 
 
 def heuristic(state):
-    max_segments = state.max_segment
-    current_segment = state.segment
-    to_go = max(max_segments - current_segment, 0)
+    """ A* Heuristic:
+        Estimate how many more trips remain to fulfill all the remaining demand assuming all the routes have the
+        highest capacity trucks available runing on them
+    """
 
+    # Fetch the trucks ordered decreasingly by their tonnage capacity
     trucks = sorted(state.trucks, key=lambda t: t.tonnage_capacity, reverse=True)
 
+    # Get the routes that haven't been completed yet
     routes = list()
     for k, v in state.route_demands.items():
         remaining = v - state.covered_demands[k]
@@ -76,10 +79,14 @@ def heuristic(state):
 
     routes = sorted(routes, key= lambda r: r[1], reverse=True)
 
+    # Compute how many segments per route would take to cover the remaining demand,
+    #  which approximates the number of trips needed to cover the demand
     segments_remaining = list()
 
+    # How many trucks are needed to fill this demand
     num_taken_trucks = 0
 
+    # Figure out the values for above's variables
     for k, remaining in routes:
         location_capacity = k[1].resident_capacity
         to_take = location_capacity if len(trucks) >= location_capacity else len(trucks)
@@ -91,6 +98,8 @@ def heuristic(state):
         i = math.ceil(float(remaining)/capacity)
         segments_remaining.append(i)
 
+    # Compute the heuristic, which is the number of segments required, and the number of trucks,
+    #  as each truck needs to go back to the garage after it's finished
     if len(segments_remaining) > 0:
         return sum(segments_remaining) + num_taken_trucks
     else:
