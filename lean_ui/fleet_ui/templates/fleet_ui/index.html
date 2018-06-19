@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Demo fleet simulator</title>
+</head>
+<body>
+<h1>Fleet simulator</h1>
+<br />
+<table>
+    <tr><td><h2>Routes on the mine:</h2></td><td><h2>Route demands</h2></td></tr>
+    <tr>
+        <td>
+<table>
+    <tr><td><b>Source</b></td><td><b>Destination</b></td></tr>
+    <tr><td>garage</td><td>loader1</td></tr>
+    <tr><td>garage</td><td>loader2</td></tr>
+    <tr><td>loader1</td><td>garage</td></tr>
+    <tr><td>loader2</td><td> garage</td></tr>
+    <tr><td>waste_dump</td><td> garage</td></tr>
+    <tr><td>garage</td><td>shovel1</td></tr>
+    <tr><td>garage</td><td>shovel2</td></tr>
+    <tr><td>waste_dump</td><td>loader1</td></tr>
+    <tr><td>loader1</td><td>waste_dump</td></tr>
+    <tr><td>waste_dump</td><td>shovel1</td></tr>
+    <tr><td>shovel1</td><td>waste_dump</td></tr>
+    <tr><td>waste_dump</td><td>shovel2</td></tr>
+    <tr><td>shovel2</td><td>waste_dump</td></tr>
+    <tr><td>crusher</td><td>shovel1</td></tr>
+    <tr><td>shovel1</td><td>crusher</td></tr>
+    <tr><td>crusher</td><td>shovel2</td></tr>
+    <tr><td>shovel2</td><td>crusher</td></tr>
+    <tr><td>crusher</td><td>loader2</td></tr>
+    <tr><td>loader2</td><td>crusher</td></tr>
+    <tr><td>loader1</td><td>crusher</td></tr>
+</table>
+            </td>
+<td>
+
+<table>
+    <tr><td><b>Source</b></td><td><b>Destination</b></td><td><b>Tons</b></td></tr>
+    <tr><td>shovel1</td><td>crusher</td><td>8000</td></tr>
+<tr><td>shovel2</td><td>crusher</td><td>1200</td></tr>
+<tr><td>loader1</td><td>crusher</td><td>4000</td></tr>
+<tr><td>shovel1</td><td>waste_dump</td><td>1600</td></tr>
+<tr><td>shovel2</td><td>waste_dump</td><td>2000</td></tr>
+<tr><td>loader1</td><td>waste_dump</td><td>1000</td></tr>
+</table>
+    </td>
+    </tr>
+    </table>
+<br>
+<h2>Parameters</h2>
+<form action="/fleet/" method="post">
+    {% csrf_token %}
+    {{ form }}
+    <input type="submit" value="Simulate" />
+</form>
+<br />
+{% if ran and simulation %}
+    <h2>Output</h2>
+    {% for s in steps %}
+        {{ s }} <br />
+    {% endfor %}
+{% elif ran %}
+    <h3>Not enough time segments to cover the demand</h3>
+{% endif %}
+</body>
+</html>

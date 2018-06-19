@@ -43,12 +43,13 @@ class Node(object):
 
 class AStar(object):
 
-    def __init__(self, initial_state, heuristic = lambda s: 0):
+    def __init__(self, initial_state, heuristic = lambda s: 0, listener = None):
         """ Parameters: initial_state: First step of the search """
         self.initial_state = initial_state
         self.heuristic = heuristic
         self.best = None
         self.saturation = 0.0
+        self.listener = listener
 
     def solve(self):
         """ Does a Uniform Cost Search and returns a reference to a node containing an optimal solution """
@@ -77,7 +78,8 @@ class AStar(object):
 
             # Fetch the next node to consider
             _, node = heapq.heappop(queue) # Ignore the first element of the tuple, which is the cost used for ranking
-            print("Iteration: %i\tEstimated Cost: %i\tAcutal Cost: %i\tSegment: %i\tProgress: %i tons" % (num, node.cost, node.state.trips, node.state.segment, node.state.total_covered_demand()))
+            if self.listener:
+                self.listener((num, node.cost, node.state.trips, node.state.segment, node.state.total_covered_demand()))
 
             # Add it to the explored cache
             explored.add(node)

@@ -27,7 +27,7 @@ class Location(object):
         self.resident_capacity = resident_capacity
 
     def __repr__(self):
-        return "Location name: %s - Capacity: %i cars" % (self.name, self.resident_capacity)
+        return "Location name: %s - Queue capacity: %i trucks" % (self.name, self.resident_capacity)
 
     def __hash__(self):
         """A car is uniquely identified by its name"""
