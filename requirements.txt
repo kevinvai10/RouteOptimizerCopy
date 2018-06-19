@@ -1,3 +1,4 @@
+django
 appnope==0.1.0
 decorator==4.2.1
 ipython==6.2.1
