@@ -40,7 +40,7 @@ def index(request):
                         s = n.state
                         num_segments = s.segment - prev_seg
                         prev_seg = s.segment
-                        steps.append("Dispatch: %i\tRepeated: %i times\tTons moved: %i" % (
+                        steps.append("Dispatch: %i\tNumber of trips: %i\tTons moved: %i" % (
                         ix, num_segments, s.total_covered_demand()))
                         steps.append("")
                         for m in n.action.movements:

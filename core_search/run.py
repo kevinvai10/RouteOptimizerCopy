@@ -3,9 +3,9 @@
 import pprint
 from collections import OrderedDict
 
-from .entities import *
-from .search import *
-from .state import *
+from core_search.entities import *
+from core_search.search import *
+from core_search.state import *
 
 def run(num_segments = 58, num_trucks=21, listener=None):
     # First build the locations
