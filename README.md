@@ -12,15 +12,15 @@ MINIMIZE:
 * Number of truck trips
 VARIABLES:
 
-*Number of trucks on each arc (based on truck assignment for the day
-*Resident/Queued fleet at each destination in the mine
+* Number of trucks on each arc (based on truck assignment for the day
+* Resident/Queued fleet at each destination in the mine
 
 CONSTRAINTS:
 
-*Tonnage demand
-*Assignment continuity
-*Resident fleet conservation
-*Total fleet size
+* Tonnage demand
+* Assignment continuity
+* Resident fleet conservation
+* Total fleet size
 
 For all you math nerds out there, here is a LINK to my profile which has more info on my research: https://www.researchgate.net/profile/Alfonso_Bonillas
 
