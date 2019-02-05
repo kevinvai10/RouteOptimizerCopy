@@ -25,3 +25,7 @@ CONSTRAINTS:
 For all you math nerds out there, here is a LINK to my profile which has more info on my research: https://www.researchgate.net/profile/Alfonso_Bonillas
 
 The simulator works like a charm (ran with sample data from a local mine with approx. 100,000 oz of Gold production per year)
+
+Feel free to contact me for more info and feel free to contribute!
+
+http://www.alioit.com
