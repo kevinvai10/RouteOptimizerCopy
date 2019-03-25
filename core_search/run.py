@@ -15,7 +15,7 @@ def run(num_segments = 58, num_trucks=21, listener=None):
     loader2 = Location("L2", 2)
     waste_dump = Location("W", 2)
     crusher = Location("C", 2)
-    garage = Location("garage", 21)
+    garage = Location("garage", num_trucks)
 
     # Build the mine configuration
     connections = [
