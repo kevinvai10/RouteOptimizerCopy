@@ -95,10 +95,12 @@ def run(num_segments = 58, num_trucks=21, listener=None):
             num_taken_trucks += len(taken_trucks)
             trucks = trucks[to_take:]
 
-            capacity = sum(t.tonnage_capacity for t in taken_trucks)
-            i = math.ceil(float(remaining)/capacity)
-            segments_remaining.append(i)
-
+            if to_take != 0:
+                capacity = sum(t.tonnage_capacity for t in taken_trucks)
+                i = math.ceil(float(remaining)/capacity)
+                segments_remaining.append(i)
+            
+            
         # Compute the heuristic, which is the number of segments required, and the number of trucks,
         #  as each truck needs to go back to the garage after it's finished
         if len(segments_remaining) > 0:
