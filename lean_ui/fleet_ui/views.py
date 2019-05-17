@@ -13,7 +13,8 @@ def index(request):
     ran = False
     # if this is a POST request we need to process the form data
     if request.method == 'POST':
-        # create a form instance and populate it with data from the request:
+        # for i in range(100):
+            # create a form instance and populate it with data from the request:
         form = FleetConfigurationForm(request.POST)
         # check whether it's valid:
         if form.is_valid():
@@ -26,6 +27,10 @@ def index(request):
             # Simulate
             steps = list()
             simulation = core_search.run.run(num_segments, form_num_trucks, lambda s: steps.append("Iteration: %i\tEstimated Cost: %i\tAcutal Cost: %i\tSegment: %i\tProgress: %i tons" % s))
+            
+            # template = '{0}-{1}-{2}'
+            # print(template.format(i+1, simulation.cost, simulation.state.total_covered_demand()))
+            
             ran = True
 
             if simulation:

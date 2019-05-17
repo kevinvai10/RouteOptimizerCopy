@@ -7,7 +7,7 @@ from core_search.entities import *
 from core_search.search import *
 from core_search.state import *
 
-def run(num_segments = 58, num_trucks=21, listener=None):
+def run(num_segments = 48, num_trucks=29, listener=None, iteracion=22):
     # First build the locations
     shovel1 = Location("S1", 2)
     shovel2 = Location("S2", 2)
@@ -49,12 +49,14 @@ def run(num_segments = 58, num_trucks=21, listener=None):
 
     # Build some fake demands
     demands = OrderedDict(
-    [((shovel1, crusher), 8000),
+    [
         ((shovel2, crusher), 1200),
         ((loader1, crusher), 4000),
         ((shovel1, waste_dump), 1600),
         ((shovel2, waste_dump), 2000),
-        ((loader1, waste_dump), 1000)]
+        ((loader1, waste_dump), 1000),
+        ((shovel1, crusher), 8000),
+    ]
     )
 
 
