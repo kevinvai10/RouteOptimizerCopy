@@ -231,7 +231,10 @@ class FleetState(object):
             # Here do something with the eligible destinations
             for d in eligible_ds:
                 # If there are trucks left to dispatch
-                if len(local_trucks) > 0:
+                if len(local_trucks) > 0 and len(local_trucks) > len(eligible_ds):
+                                        
+                    #if len(local_trucks) < len(self.route_demands) and len(local_trucks) % 2 != 0:
+                        #return 0;
                     # How many trucks could be dispatched to the destination
                     num_slots = d.resident_capacity - len(self.resident_trucks[d])
                     # Dispatch those trucks
