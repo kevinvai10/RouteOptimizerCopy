@@ -3,6 +3,7 @@ from django.http import HttpResponse
 from django.template import loader
 import core_search.run
 import pprint
+import json
 
 from .forms import FleetConfigurationForm
 
@@ -11,6 +12,9 @@ def index(request):
     simulation = None
     steps = None
     ran = False
+    rawData = []
+    animationData=[]
+
     # if this is a POST request we need to process the form data
     if request.method == 'POST':
         # for i in range(100):
@@ -39,6 +43,7 @@ def index(request):
                 steps.append("Total number of trips: %i" % simulation.cost)
                 steps.append("")
                 nodes = simulation.path_from_root()
+                rawData = nodes[:]
                 prev_seg = 1
                 for ix, n in enumerate(nodes):
                     if n.action:
@@ -51,11 +56,16 @@ def index(request):
                         for m in n.action.movements:
                             steps.append(str(m))
                         steps.append("")
-
+                
+                # Data for animation
+                for d in rawData:
+                    if d.action:
+                        dispatches = [[t.truck.name, t.source.name, t.destination.name] for t in d.action.movements]
+                        animationData.append(dispatches)
 
     # if a GET (or any other method) we'll create a blank form
     else:
         form = FleetConfigurationForm()
 
-    return render(request, 'fleet_ui/index.html', {'form':form, 'ran':ran, 'simulation':simulation, 'steps':steps})
+    return render(request, 'fleet_ui/index.html', {'form':form, 'ran':ran, 'simulation':simulation, 'steps':steps,'animationData':json.dumps(animationData[1:])})
 
