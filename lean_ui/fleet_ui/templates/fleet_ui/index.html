@@ -150,7 +150,7 @@
         console.log(`dispatch-${indexDispatch + 1}`);
         console.log(animationData[indexDispatch]);
 
-        document.getElementById("dispatch").innerHTML = indexDispatch + 1;
+        document.getElementById("dispatch").innerHTML = `Dispatch: ${indexDispatch + 1}`;
 
         animations.filter(function(animation){
             if(animation!==undefined){
@@ -182,7 +182,7 @@
         console.log(`dispatch-${indexDispatch - 1}`);
         console.log(animationData[indexDispatch]);
 
-        document.getElementById("dispatch").innerHTML = indexDispatch + 1;
+        document.getElementById("dispatch").innerHTML = `Dispatch: ${indexDispatch+1}`;
 
         animations.filter(function(animation){
             if(animation!==undefined){
@@ -211,7 +211,8 @@
     var map = L.map('map').setView([ 30.351780,-111.118582 ], 15);
     var animations = [];
     var indexDispatch = 0;
-    document.getElementById("dispatch").innerHTML = indexDispatch+1;
+
+    document.getElementById("dispatch").innerHTML = `Dispatch: ${indexDispatch+1}`;
 
     var animationData = JSON.parse('{{ animationData | escapejs }}');
 
