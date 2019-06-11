@@ -1,275 +1,509 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.css" />
-        <script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.AnimatedMarker/1.0.0/AnimatedMarker.min.js"></script>
-    <style type="text/css">
-        #map { 
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.css" />
+    <meta charset="UTF-8">
+    <title>Demo fleet simulator</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+
+    <style>
+        #map {
             width: 100%;
             height: 400px;
-            padding: 0; 
+            padding: 0;
             margin: 0;
         }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        .floatLeft {
+            width: 30%;
+            float: left;
+        }
+
+        .floatLeft2 {
+            width: 50%;
+            float: left;
+        }
+
+        .floatLeft3 {
+            width: 40%;
+            float: left;
+        }
+
+        .flex-container {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+        }
+
+        .displayTable {
+            margin: 25px;
+        }
     </style>
-    <title>Demo fleet simulator</title>
 </head>
+
 <body>
-<h1>Fleet simulator</h1>
-<br />
-<table>
-    <tr><td><h2>Routes on the mine:</h2></td><td><h2>Route demands</h2></td></tr>
-    <tr>
-        <td>
-<table>
-    <tr><td><b>Source</b></td><td><b>Destination</b></td></tr>
-    <tr><td>garage</td><td>loader1</td></tr>
-    <tr><td>garage</td><td>loader2</td></tr>
-    <tr><td>loader1</td><td>garage</td></tr>
-    <tr><td>loader2</td><td> garage</td></tr>
-    <tr><td>waste_dump</td><td> garage</td></tr>
-    <tr><td>garage</td><td>shovel1</td></tr>
-    <tr><td>garage</td><td>shovel2</td></tr>
-    <tr><td>waste_dump</td><td>loader1</td></tr>
-    <tr><td>loader1</td><td>waste_dump</td></tr>
-    <tr><td>waste_dump</td><td>shovel1</td></tr>
-    <tr><td>shovel1</td><td>waste_dump</td></tr>
-    <tr><td>waste_dump</td><td>shovel2</td></tr>
-    <tr><td>shovel2</td><td>waste_dump</td></tr>
-    <tr><td>crusher</td><td>shovel1</td></tr>
-    <tr><td>shovel1</td><td>crusher</td></tr>
-    <tr><td>crusher</td><td>shovel2</td></tr>
-    <tr><td>shovel2</td><td>crusher</td></tr>
-    <tr><td>crusher</td><td>loader2</td></tr>
-    <tr><td>loader2</td><td>crusher</td></tr>
-    <tr><td>loader1</td><td>crusher</td></tr>
-</table>
-            </td>
-<td>
+    <h1>Fleet simulator</h1>
+    <div class="flex-container">
+        <div class="displayTable">
+            <table>
+                <thead>
+                    <tr>
+                        <th>
+                            <h2>Routes on the mine:</h2>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><b>Source</b></td>
+                        <td><b>Destination</b></td>
+                    </tr>
+                    <tr>
+                        <td>garage</td>
+                        <td>loader1</td>
+                    </tr>
+                    <tr>
+                        <td>garage</td>
+                        <td>loader2</td>
+                    </tr>
+                    <tr>
+                        <td>loader1</td>
+                        <td>garage</td>
+                    </tr>
+                    <tr>
+                        <td>loader2</td>
+                        <td> garage</td>
+                    </tr>
+                    <tr>
+                        <td>waste_dump</td>
+                        <td> garage</td>
+                    </tr>
+                    <tr>
+                        <td>garage</td>
+                        <td>shovel1</td>
+                    </tr>
+                    <tr>
+                        <td>garage</td>
+                        <td>shovel2</td>
+                    </tr>
+                    <tr>
+                        <td>waste_dump</td>
+                        <td>loader1</td>
+                    </tr>
+                    <tr>
+                        <td>loader1</td>
+                        <td>waste_dump</td>
+                    </tr>
+                    <tr>
+                        <td>waste_dump</td>
+                        <td>shovel1</td>
+                    </tr>
+                    <tr>
+                        <td>shovel1</td>
+                        <td>waste_dump</td>
+                    </tr>
+                    <tr>
+                        <td>waste_dump</td>
+                        <td>shovel2</td>
+                    </tr>
+                    <tr>
+                        <td>shovel2</td>
+                        <td>waste_dump</td>
+                    </tr>
+                    <tr>
+                        <td>crusher</td>
+                        <td>shovel1</td>
+                    </tr>
+                    <tr>
+                        <td>shovel1</td>
+                        <td>crusher</td>
+                    </tr>
+                    <tr>
+                        <td>crusher</td>
+                        <td>shovel2</td>
+                    </tr>
+                    <tr>
+                        <td>shovel2</td>
+                        <td>crusher</td>
+                    </tr>
+                    <tr>
+                        <td>crusher</td>
+                        <td>loader2</td>
+                    </tr>
+                    <tr>
+                        <td>loader2</td>
+                        <td>crusher</td>
+                    </tr>
+                    <tr>
+                        <td>loader1</td>
+                        <td>crusher</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="displayTable">
+            <table>
+                <thead>
+                    <th>
+                        <h2>Route demands:</h2>
+                    </th>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><b>Source</b></td>
+                        <td><b>Destination</b></td>
+                        <td><b>Tons</b></td>
+                    </tr>
+                    <tr>
+                        <td>shovel1</td>
+                        <td>crusher</td>
+                        <td>8000</td>
+                    </tr>
+                    <tr>
+                        <td>shovel2</td>
+                        <td>crusher</td>
+                        <td>1200</td>
+                    </tr>
+                    <tr>
+                        <td>loader1</td>
+                        <td>crusher</td>
+                        <td>4000</td>
+                    </tr>
+                    <tr>
+                        <td>shovel1</td>
+                        <td>waste_dump</td>
+                        <td>1600</td>
+                    </tr>
+                    <tr>
+                        <td>shovel2</td>
+                        <td>waste_dump</td>
+                        <td>2000</td>
+                    </tr>
+                    <tr>
+                        <td>loader1</td>
+                        <td>waste_dump</td>
+                        <td>1000</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="displayTable">
+            <h2>Parameters</h2>
+            <form action="/fleet/" method="post">
+                {% csrf_token %}
+                {{ form }}
+                <input type="submit" value="Simulate" />
+            </form>
+            {% if ran and simulation %}
+            <h2>Output</h2>
+            {% for s in steps %}
+            {{ s }} <br />
+            {% endfor %}
+            {% elif ran %}
+            <h3>Not enough time segments or trucks to cover the demand</h3>
+            {% endif %}
+        </div>
+    </div>
 
-<table>
-    <tr><td><b>Source</b></td><td><b>Destination</b></td><td><b>Tons</b></td></tr>
-    <tr><td>shovel1</td><td>crusher</td><td>8000</td></tr>
-<tr><td>shovel2</td><td>crusher</td><td>1200</td></tr>
-<tr><td>loader1</td><td>crusher</td><td>4000</td></tr>
-<tr><td>shovel1</td><td>waste_dump</td><td>1600</td></tr>
-<tr><td>shovel2</td><td>waste_dump</td><td>2000</td></tr>
-<tr><td>loader1</td><td>waste_dump</td><td>1000</td></tr>
-</table>
-    </td>
-    </tr>
-    </table>
-<br>
-<div>
-    <div id="map"></div>
-    <br/>
-    <!-- <button onclick="start()">Click Start</button>
+    <div>
+        <div id="map"></div>
+        <br />
+        <!-- <button onclick="start()">Click Start</button>
     <button onclick="restart()">Click Restart</button> -->
-    <button onclick="preview()">Preview</button>
-    <button onclick="next()">Next</button>
-    <span id="dispatch"></span>
-</div>
-<br>
-<h2>Parameters</h2>
-<form action="/fleet/" method="post">
-    {% csrf_token %}
-    {{ form }}
-    <input type="submit" value="Simulate" />
-</form>
-<br />
-{% if ran and simulation %}
-    <h2>Output</h2>
-    {% for s in steps %}
-        {{ s }} <br />
-    {% endfor %}
-{% elif ran %}
-    <h3>Not enough time segments or trucks to cover the demand</h3>
-{% endif %}
+        <button onclick="preview()">Preview</button>
+        <button onclick="next()">Next</button>
+        <span id="dispatch"></span>
+    </div>
 
-<script src='{% static "js/routes.js" %}'></script>
-<script>
-    // FUNTIONS -----------------------------------------------------------------------
-    function start() {
-        console.log("TEST START....");
-        animatedMarker1.start();
-    }
+    <script src='{% static "js/routes.js" %}'></script>
+    <script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.AnimatedMarker/1.0.0/AnimatedMarker.min.js"></script>
+    <script>
+        // FUNTIONS -----------------------------------------------------------------------
+        function start() {
+            console.log("TEST START....");
+            animatedMarker1.start();
+        }
 
-    function restart() {
-        console.log("TEST RESTART....");
-        trucks.forEach(function(truck) {
-            map.removeLayer(truck);
-        });
+        function restart() {
+            console.log("TEST RESTART....");
+            trucks.forEach(function (truck) {
+                map.removeLayer(truck);
+            });
 
-        animatedMarker1 = L.animatedMarker(lineCG.getLatLngs(), { icon: truckIcon, autoStart: false });
-        animatedMarker2 = L.animatedMarker(lineWG.getLatLngs(), { icon: truckIcon });
+            animatedMarker1 = L.animatedMarker(lineCG.getLatLngs(), {
+                icon: truckIcon,
+                autoStart: false
+            });
+            animatedMarker2 = L.animatedMarker(lineWG.getLatLngs(), {
+                icon: truckIcon
+            });
 
-        trucks = [animatedMarker1 , animatedMarker2];
+            trucks = [animatedMarker1, animatedMarker2];
 
-        map.addLayer(animatedMarker1);
-        map.addLayer(animatedMarker2);
-    }
+            map.addLayer(animatedMarker1);
+            map.addLayer(animatedMarker2);
+        }
 
-    function selectAnimation(truck) {
-        if(truck[1] === 'C' && truck[2] === 'garage'){
-            return L.animatedMarker(L.polyline(CG).getLatLngs(), { icon: truckIcon, autoStart: true, onEnd: function() { map.removeLayer(this); }});
-        }
-        else if(truck[1] === 'W' && truck[2] === 'garage'){
-            return L.animatedMarker(L.polyline(WG).getLatLngs(), { icon: truckIcon, autoStart: true, onEnd: function() { map.removeLayer(this); }});
-        }
-        else if(truck[1] === 'L1' && truck[2] === 'C'){
-            return L.animatedMarker(L.polyline(L1C).getLatLngs(), { icon: truckIcon, autoStart: true, onEnd: function() { map.removeLayer(this); }});
-        }
-        else if(truck[1] === 'L1' && truck[2] === 'W'){
-            return L.animatedMarker(L.polyline(L1W).getLatLngs(), { icon: truckIcon, autoStart: true, onEnd: function() { map.removeLayer(this); }});
-        }
-        else if(truck[1] === 'L2' && truck[2] === 'C'){
-            return L.animatedMarker(L.polyline(L2C).getLatLngs(), { icon: truckIcon, autoStart: true, onEnd: function() { map.removeLayer(this); }});
-        }
-        else if(truck[1] === 'L2' && truck[2] === 'W'){
-            return L.animatedMarker(L.polyline(L1W).getLatLngs(), { icon: truckIcon, autoStart: true, onEnd: function() { map.removeLayer(this); }});
-        }
-        else if(truck[1] === 'S1' && truck[2] === 'C'){
-            return L.animatedMarker(L.polyline(S1C).getLatLngs(), { icon: truckIcon, autoStart: true, onEnd: function() { map.removeLayer(this); }});
-        }
-        else if(truck[1] === 'S1' && truck[2] === 'W'){
-            return L.animatedMarker(L.polyline(S1W).getLatLngs(), { icon: truckIcon, autoStart: true, onEnd: function() { map.removeLayer(this); }});
-        }
-        else if(truck[1] === 'S2' && truck[2] === 'C'){
-            return L.animatedMarker(L.polyline(S2C).getLatLngs(), { icon: truckIcon, autoStart: true, onEnd: function() { map.removeLayer(this); }});
-        }
-        else if(truck[1] === 'S2' && truck[2] === 'W'){
-            return L.animatedMarker(L.polyline(S2W).getLatLngs(), { icon: truckIcon, autoStart: true, onEnd: function() { map.removeLayer(this); }});
-        }
-    }
-
-    function next(){
-        indexDispatch = indexDispatch + 1 < animationData.length ? indexDispatch + 1 : indexDispatch;
-        
-        console.log(`dispatch-${indexDispatch + 1}`);
-        console.log(animationData[indexDispatch]);
-
-        document.getElementById("dispatch").innerHTML = `Dispatch: ${indexDispatch + 1}`;
-
-        animations.filter(function(animation){
-            if(animation!==undefined){
-                return animation;
+        function selectAnimation(truck) {
+            if (truck[1] === 'C' && truck[2] === 'garage') {
+                return L.animatedMarker(L.polyline(CG).getLatLngs(), {
+                    icon: truckIcon,
+                    autoStart: true,
+                    onEnd: function () {
+                        map.removeLayer(this);
+                    }
+                });
+            } else if (truck[1] === 'W' && truck[2] === 'garage') {
+                return L.animatedMarker(L.polyline(WG).getLatLngs(), {
+                    icon: truckIcon,
+                    autoStart: true,
+                    onEnd: function () {
+                        map.removeLayer(this);
+                    }
+                });
+            } else if (truck[1] === 'L1' && truck[2] === 'C') {
+                return L.animatedMarker(L.polyline(L1C).getLatLngs(), {
+                    icon: truckIcon,
+                    autoStart: true,
+                    onEnd: function () {
+                        map.removeLayer(this);
+                    }
+                });
+            } else if (truck[1] === 'L1' && truck[2] === 'W') {
+                return L.animatedMarker(L.polyline(L1W).getLatLngs(), {
+                    icon: truckIcon,
+                    autoStart: true,
+                    onEnd: function () {
+                        map.removeLayer(this);
+                    }
+                });
+            } else if (truck[1] === 'L2' && truck[2] === 'C') {
+                return L.animatedMarker(L.polyline(L2C).getLatLngs(), {
+                    icon: truckIcon,
+                    autoStart: true,
+                    onEnd: function () {
+                        map.removeLayer(this);
+                    }
+                });
+            } else if (truck[1] === 'L2' && truck[2] === 'W') {
+                return L.animatedMarker(L.polyline(L1W).getLatLngs(), {
+                    icon: truckIcon,
+                    autoStart: true,
+                    onEnd: function () {
+                        map.removeLayer(this);
+                    }
+                });
+            } else if (truck[1] === 'S1' && truck[2] === 'C') {
+                return L.animatedMarker(L.polyline(S1C).getLatLngs(), {
+                    icon: truckIcon,
+                    autoStart: true,
+                    onEnd: function () {
+                        map.removeLayer(this);
+                    }
+                });
+            } else if (truck[1] === 'S1' && truck[2] === 'W') {
+                return L.animatedMarker(L.polyline(S1W).getLatLngs(), {
+                    icon: truckIcon,
+                    autoStart: true,
+                    onEnd: function () {
+                        map.removeLayer(this);
+                    }
+                });
+            } else if (truck[1] === 'S2' && truck[2] === 'C') {
+                return L.animatedMarker(L.polyline(S2C).getLatLngs(), {
+                    icon: truckIcon,
+                    autoStart: true,
+                    onEnd: function () {
+                        map.removeLayer(this);
+                    }
+                });
+            } else if (truck[1] === 'S2' && truck[2] === 'W') {
+                return L.animatedMarker(L.polyline(S2W).getLatLngs(), {
+                    icon: truckIcon,
+                    autoStart: true,
+                    onEnd: function () {
+                        map.removeLayer(this);
+                    }
+                });
             }
-        }).forEach(function(animation) {
-            map.removeLayer(animation);
-        });
-        animations=[];
+        }
 
-        animationData[indexDispatch].forEach(function(truck){
-            var animation = selectAnimation(truck);
-            animations.push(animation);
-        });
+        function next() {
+            indexDispatch = indexDispatch + 1 < animationData.length ? indexDispatch + 1 : indexDispatch;
 
-        console.log(animations)
-        animations.filter(function(animation){
-            if(animation!==undefined){
-                return animation;
-            }
-        }).forEach(function(animation){
-            map.addLayer(animation);
-        });
-    }
+            console.log(`dispatch-${indexDispatch + 1}`);
+            console.log(animationData[indexDispatch]);
 
-    function preview(){
-        indexDispatch = indexDispatch - 1 >= 0 ? indexDispatch - 1 : indexDispatch;
-        
-        console.log(`dispatch-${indexDispatch - 1}`);
-        console.log(animationData[indexDispatch]);
+            document.getElementById("dispatch").innerHTML = `Dispatch: ${indexDispatch + 1}`;
+
+            animations.filter(function (animation) {
+                if (animation !== undefined) {
+                    return animation;
+                }
+            }).forEach(function (animation) {
+                map.removeLayer(animation);
+            });
+            animations = [];
+
+            animationData[indexDispatch].forEach(function (truck) {
+                var animation = selectAnimation(truck);
+                animations.push(animation);
+            });
+
+            console.log(animations)
+            animations.filter(function (animation) {
+                if (animation !== undefined) {
+                    return animation;
+                }
+            }).forEach(function (animation) {
+                map.addLayer(animation);
+            });
+        }
+
+        function preview() {
+            indexDispatch = indexDispatch - 1 >= 0 ? indexDispatch - 1 : indexDispatch;
+
+            console.log(`dispatch-${indexDispatch - 1}`);
+            console.log(animationData[indexDispatch]);
+
+            document.getElementById("dispatch").innerHTML = `Dispatch: ${indexDispatch+1}`;
+
+            animations.filter(function (animation) {
+                if (animation !== undefined) {
+                    return animation;
+                }
+            }).forEach(function (animation) {
+                map.removeLayer(animation);
+            });
+            animations = [];
+
+            animationData[indexDispatch].forEach(function (truck) {
+                var animation = selectAnimation(truck);
+                animations.push(animation);
+            });
+
+            console.log(animations)
+            animations.filter(function (animation) {
+                if (animation !== undefined) {
+                    return animation;
+                }
+            }).forEach(function (animation) {
+                map.addLayer(animation);
+            });
+        }
+        // START ----------------------------------------------------------------------------
+        var map = L.map('map').setView([30.351780, -111.118582], 15);
+        var animations = [];
+        var indexDispatch = 0;
 
         document.getElementById("dispatch").innerHTML = `Dispatch: ${indexDispatch+1}`;
 
-        animations.filter(function(animation){
-            if(animation!==undefined){
-                return animation;
-            }
-        }).forEach(function(animation) {
-            map.removeLayer(animation);
+        var animationData = JSON.parse('{{ animationData | escapejs }}');
+
+        L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
+        }).addTo(map);
+
+        //ICOS - PLACES
+        var s1Icon = L.icon({
+            iconUrl: '{% static "images/s1_26.png" %}',
+            iconAnchor: [13, 35]
         });
-        animations=[];
-
-        animationData[indexDispatch].forEach(function(truck){
-            var animation = selectAnimation(truck);
-            animations.push(animation);
+        var s2Icon = L.icon({
+            iconUrl: '{% static "images/s2_26.png" %}',
+            iconAnchor: [13, 35]
         });
-
-        console.log(animations)
-        animations.filter(function(animation){
-            if(animation!==undefined){
-                return animation;
-            }
-        }).forEach(function(animation){
-            map.addLayer(animation);
+        var l1Icon = L.icon({
+            iconUrl: '{% static "images/l1_26.png" %}',
+            iconAnchor: [13, 35]
         });
-    }
-    // START ----------------------------------------------------------------------------
-    var map = L.map('map').setView([ 30.351780,-111.118582 ], 15);
-    var animations = [];
-    var indexDispatch = 0;
-
-    document.getElementById("dispatch").innerHTML = `Dispatch: ${indexDispatch+1}`;
-
-    var animationData = JSON.parse('{{ animationData | escapejs }}');
-
-	L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{ maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3']}).addTo(map);
-    
-    //ICOS - PLACES
-    var s1Icon = L.icon({iconUrl: '{% static "images/s1_26.png" %}', iconAnchor:[13, 35] });
-    var s2Icon = L.icon({iconUrl: '{% static "images/s2_26.png" %}', iconAnchor:[13, 35] });
-    var l1Icon = L.icon({iconUrl: '{% static "images/l1_26.png" %}', iconAnchor:[13, 35] });
-    var l2Icon = L.icon({iconUrl: '{% static "images/l2_26.png" %}', iconAnchor:[13, 35] });
-    var cIcon = L.icon({iconUrl: '{% static "images/c_26.png" %}', iconAnchor:[13, 35] });
-    var wIcon = L.icon({iconUrl: '{% static "images/w_26.png" %}', iconAnchor:[13, 35] });
-    var gIcon = L.icon({iconUrl: '{% static "images/g_26.png" %}', iconAnchor:[13, 35] });
-
-    //ICOS - TRUCK
-    var truckIcon = L.icon({ iconUrl: '{% static "images/truck-24.png" %}', iconAnchor: [11, 32] });
-    
-    //MARKERS
-    L.marker(s1LatLon,{icon: s1Icon }).addTo(map);
-    L.marker(s2LatLon,{icon: s2Icon }).addTo(map);
-    L.marker(l1LatLon,{icon: l1Icon }).addTo(map);
-    L.marker(l2LatLon,{icon: l2Icon }).addTo(map);
-    L.marker(cLatLon,{icon: cIcon }).addTo(map);
-    L.marker(wLatLon,{icon: wIcon }).addTo(map);
-    L.marker(gLatLon,{icon: gIcon }).addTo(map);
-    
-    //ROUTES PATHS
-    var lineCG = L.polyline(CG).addTo(map);
-    var lineWG = L.polyline(WG).addTo(map);
-    var lineL1C = L.polyline(L1C).addTo(map);
-    var lineL1W = L.polyline(L1W).addTo(map);
-    L.polyline(L2C).addTo(map);
-    L.polyline(L2W).addTo(map);
-    L.polyline(S1C).addTo(map);
-    L.polyline(S1W).addTo(map);
-    L.polyline(S2C).addTo(map);
-    L.polyline(S2W).addTo(map);
-
-    //ANIMATiONS
-    if(animationData.length){
-        console.log(`Default dispatch-${indexDispatch + 1}`);
-        console.log(animationData[indexDispatch]);
-
-        animationData[indexDispatch].forEach(function(truck){
-            var animation = selectAnimation(truck);
-            animations.push(animation);
+        var l2Icon = L.icon({
+            iconUrl: '{% static "images/l2_26.png" %}',
+            iconAnchor: [13, 35]
+        });
+        var cIcon = L.icon({
+            iconUrl: '{% static "images/c_26.png" %}',
+            iconAnchor: [13, 35]
+        });
+        var wIcon = L.icon({
+            iconUrl: '{% static "images/w_26.png" %}',
+            iconAnchor: [13, 35]
+        });
+        var gIcon = L.icon({
+            iconUrl: '{% static "images/g_26.png" %}',
+            iconAnchor: [13, 35]
         });
 
-        animations.filter(function(animation){
-            if(animation!==undefined){
-                return animation;
-            }
-        }).forEach(function(animation){
-            map.addLayer(animation);
-        })
-    }
-</script>
+        //ICOS - TRUCK
+        var truckIcon = L.icon({
+            iconUrl: '{% static "images/truck-24.png" %}',
+            iconAnchor: [11, 32]
+        });
+
+        //MARKERS
+        L.marker(s1LatLon, {
+            icon: s1Icon
+        }).addTo(map);
+        L.marker(s2LatLon, {
+            icon: s2Icon
+        }).addTo(map);
+        L.marker(l1LatLon, {
+            icon: l1Icon
+        }).addTo(map);
+        L.marker(l2LatLon, {
+            icon: l2Icon
+        }).addTo(map);
+        L.marker(cLatLon, {
+            icon: cIcon
+        }).addTo(map);
+        L.marker(wLatLon, {
+            icon: wIcon
+        }).addTo(map);
+        L.marker(gLatLon, {
+            icon: gIcon
+        }).addTo(map);
+
+        //ROUTES PATHS
+        var lineCG = L.polyline(CG).addTo(map);
+        var lineWG = L.polyline(WG).addTo(map);
+        var lineL1C = L.polyline(L1C).addTo(map);
+        var lineL1W = L.polyline(L1W).addTo(map);
+        L.polyline(L2C).addTo(map);
+        L.polyline(L2W).addTo(map);
+        L.polyline(S1C).addTo(map);
+        L.polyline(S1W).addTo(map);
+        L.polyline(S2C).addTo(map);
+        L.polyline(S2W).addTo(map);
+
+        //ANIMATiONS
+        if (animationData.length) {
+            console.log(`Default dispatch-${indexDispatch + 1}`);
+            console.log(animationData[indexDispatch]);
+
+            animationData[indexDispatch].forEach(function (truck) {
+                var animation = selectAnimation(truck);
+                animations.push(animation);
+            });
+
+            animations.filter(function (animation) {
+                if (animation !== undefined) {
+                    return animation;
+                }
+            }).forEach(function (animation) {
+                map.addLayer(animation);
+            })
+        }
+    </script>
 </body>
 </html>
-
