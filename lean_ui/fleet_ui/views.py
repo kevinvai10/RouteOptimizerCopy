@@ -67,5 +67,5 @@ def index(request):
     else:
         form = FleetConfigurationForm()
 
-    return render(request, 'fleet_ui/index.html', {'form':form, 'ran':ran, 'simulation':simulation, 'steps':steps,'animationData':json.dumps(animationData[1:])})
+    return render(request, 'fleet_ui/index.html', {'form':form, 'ran':ran, 'simulation':simulation, 'steps':steps,'animationData':json.dumps(animationData[:])})
 
