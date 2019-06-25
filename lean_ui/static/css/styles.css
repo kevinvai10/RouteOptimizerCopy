@@ -1,0 +1,156 @@
+    /*particles*/
+    
+    /*particles end*/    
+    .cool-gradient-futuristic {
+	    width: 100wh;
+	    height: 90vh;
+	    color: #000;
+	    background: linear-gradient(141deg, #12c2e9 0%, #c471ed 51%, #f64f59 75%);
+        background-size: 400% 400%;
+	    -webkit-animation: Gradient 50s ease infinite;
+    	-moz-animation: Gradient 50s ease infinite;
+	    animation: Gradient 50s ease infinite;  
+    }
+
+    .grad1 {  
+	width: 100wh;
+	height: 100%;
+    background: linear-gradient(141deg, #12c2e9, #c471ed, #f64f59);
+    background-size: 150% 150%;
+    }
+    .cool-gradient-darkmode {
+	    width: 100wh;
+	    height: 90vh;
+	    color: #000;
+	    background: linear-gradient(-45deg, #373B44, #4286f4);
+        background-size: 400% 400%;
+	    /*-webkit-animation: Gradient 35s ease infinite;
+    	-moz-animation: Gradient 35s ease infinite;
+	    animation: Gradient 35s ease infinite;  */
+    }
+
+    .cool-gradient-bluemode {
+	    width: 100wh;
+	    height: 90vh;
+	    color: #000;
+	    background: linear-gradient(-45deg, #1c92d2, #f2fcfe);
+        background-size: 150% 150%;
+	    /*-webkit-animation: Gradient 15s ease infinite;
+    	-moz-animation: Gradient 15s ease infinite;
+	    animation: Gradient 15s ease infinite;  */
+    }
+
+    .cool-gradient-friday {
+	    width: 100wh;
+	    height: 90vh;
+	    color: #000;
+	    background: linear-gradient(45deg, #2BC0E4 50%, #EAECC6 30%);
+        background-size: 400% 400%;
+	    /*-webkit-animation: Gradient 15s ease infinite;
+    	-moz-animation: Gradient 15s ease infinite;
+	    animation: Gradient 15s ease infinite;  */
+    }
+
+    .cool-gradient h1,
+    .cool-gradient h2,
+    .cool-gradient h3,
+    .cool-gradient h4,
+    /*.cool-gradient th,
+    .cool-gradient td,*/
+    .cool-gradient p {
+        color: whitesmoke;
+    }
+
+@-webkit-keyframes Gradient {
+	0% {
+		background-position: 0% 50%
+	}
+	50% {
+		background-position: 100% 50%
+	}
+	100% {
+		background-position: 0% 50%
+	}
+}
+
+@-moz-keyframes Gradient {
+	0% {
+		background-position: 0% 50%
+	}
+	50% {
+		background-position: 100% 50%
+	}
+	100% {
+		background-position: 0% 50%
+	}
+}
+
+@keyframes Gradient {
+	0% {
+		background-position: 0% 50%
+	}
+	50% {
+		background-position: 100% 50%
+	}
+	100% {
+		background-position: 0% 50%
+	}
+}
+
+        #map {
+            width: 100%;
+            height: 400px;
+            padding: 0;
+            margin: 0;
+        }
+
+        h1,h2,h3,h4,p,th,td{
+            /*color: #fff*/
+        }
+
+        .button-map{
+            transition: all 500ms;
+        }
+        .button-map:hover{
+            padding: 16px;
+        }
+        
+        .table-div{
+            height: 350px;
+            overflow-y: scroll;
+        }
+
+        .table-div:hover{
+            overflow-y: scroll; 
+        }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        .floatLeft {
+            width: 30%;
+            float: left;
+        }
+
+        .floatLeft2 {
+            width: 50%;
+            float: left;
+        }
+
+        .floatLeft3 {
+            width: 40%;
+            float: left;
+        }
+
+        .flex-container {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+        }
+
+        .displayTable {
+            margin: 25px;
+        }
